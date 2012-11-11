@@ -85,13 +85,23 @@ var w = 1280,
     color = d3.scale.category10();
 
 var force = d3.layout.force()
-    .gravity(0.02)
-    .charge(-10)
+    .gravity(0.1)
+    .charge(-20)
     .size([w, h])
-    .linkDistance(function(d) {return d.weight * 20});
+    .linkDistance(function(d) {return d.weight * 20})
+    .linkStrength(1);
+
+var force2 = d3.layout.force()
+    .gravity(0.1)
+    .charge(function(d) {
+      function mkd(i) {return norm([d.x-d.reln[i].x, d.y-d.reln[i].y])}
+      return -2 * (mkd(0) + mkd(1) + mkd(2));
+    })
+    .size([w, h]);
 
 var links = force.links(),
-    nodes = force.nodes();
+    nodes = force.nodes(),
+    nodes2 = force2.nodes();
 
 var svg = d3.select("#chart").append("svg:svg")
     .attr("width", w)
@@ -137,7 +147,7 @@ function mymax(as, f) {
 }
 
 force.on("tick", function(e) {
-  var k = e.alpha * 1;
+  var k = 1; // e.alpha * 1;
   links.forEach(function(link) {
     // link.source, link.target
     var p1 = link.source, p2 = link.target;
@@ -151,6 +161,18 @@ force.on("tick", function(e) {
     p2.y += (mp[1] + adjust[1] - p2.y) * k;
   });
 
+  var k = 0.3;
+  nodes2.forEach(function(n) {
+    var sx = (n.reln[0].x + n.reln[1].x + n.reln[2].x)/3 - n.x;
+    var sy = (n.reln[0].y + n.reln[1].y + n.reln[2].y)/3 - n.y;
+    n.reln[0].x -= sx * k;
+    n.reln[1].x -= sx * k;
+    n.reln[2].x -= sx * k;
+    n.reln[0].y -= sy * k;
+    n.reln[1].y -= sy * k;
+    n.reln[2].y -= sy * k;
+  });
+
   svg.selectAll("circle")
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; });
@@ -162,18 +184,29 @@ force.on("tick", function(e) {
       .attr("y2", function(d) { return d.target.y; });
 });
 
+force2.on("tick", function(e) {
+
+  svg.selectAll("circle")
+      .attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; });
+});
+
 var p0;
 
 svg.on("mousemove", function() {
   var p1 = d3.svg.mouse(this),
       a = {type: 0, x: p1[0], y: p1[1], px: (p0 || (p0 = p1))[0], py: p0[1]},
       b = {type: 1},
-      link = {source: a, target: b, weight: (Math.random() * 4 | 0) + 1 };
+      c = {type: 2},
+      d = {type: 3, x: p1[0], y: p1[1], reln: [a,b,c]},
+      l1 = {source: a, target: b, weight: (Math.random() * 4 | 0) + 1 },
+      l2 = {source: b, target: c, weight: (Math.random() * 4 | 0) + 1 },
+      l3 = {source: c, target: a, weight: (Math.random() * 4 | 0) + 1 };
 
   p0 = p1;
 
   svg.selectAll()
-      .data([a, b])
+      .data([a, b, c, d])
     .enter().append("svg:circle")
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; })
@@ -186,20 +219,37 @@ svg.on("mousemove", function() {
 
   // link identity not maintained...
   svg.insert("svg:line", "circle")
-    .data([link])
+    .data([l2])
+    .transition()
+      .delay(3000)
+      .remove();
+  svg.insert("svg:line", "circle")
+    .data([l3])
+    .transition()
+      .delay(3000)
+      .remove();
+  svg.insert("svg:line", "circle")
+    .data([l1])
     .transition()
       .delay(3000)
       .each("end", function() {
         nodes.splice(nodes.indexOf(a), 1);
         nodes.splice(nodes.indexOf(b), 1);
-        links.splice(links.indexOf(link), 1);
+        nodes.splice(nodes.indexOf(c), 1);
+        nodes2.splice(nodes2.indexOf(d), 1);
+        links.splice(links.indexOf(l1), 1);
+        links.splice(links.indexOf(l2), 1);
+        links.splice(links.indexOf(l3), 1);
         force.start();
+        force2.start();
       })
       .remove();
 
-  nodes.push(a, b);
-  links.push(link);
+  nodes.push(a, b, c);
+  nodes2.push(d);
+  links.push(l1, l2, l3);
   force.start();
+  force2.start();
 });
 
 function fill(d) {
