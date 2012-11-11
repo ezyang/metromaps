@@ -16,6 +16,15 @@ var links = [];
 d3.xml("greek2.graphml", function(doc) {
   var format = d3.time.format("%d/%m/%Y");
   var i = 0;
+  // TODO: The first step is to simplify our graph by removing all
+  // straight line segments of the graph.  The end result
+  // should be a new list of key nodes (nodes with adjacent edge
+  // count not equal to two) and edges for all of those nodes, with
+  // weight equal to the number of edges that they are representing.
+  // For example:
+  //   A -- B -- C -- D
+  // reduces to:
+  //   A -- D  (with edge weight = 3)
   d3.select(doc).selectAll("node").each(function () {
     var e = d3.select(this);
     var id = e.attr("id");
