@@ -85,7 +85,7 @@ var w = 1280,
     color = d3.scale.category10();
 
 var force = d3.layout.force()
-    .gravity(0.03)
+    .gravity(0.02)
     .charge(-10)
     .size([w, h])
     .linkDistance(function(d) {return d.weight * 20});
@@ -127,6 +127,9 @@ function scale(k, p) {
 function norm(p) {
   return Math.sqrt(p[0]*p[0]+p[1]*p[1]);
 }
+function vec(n) {
+  return [n.x,n.y];
+}
 function mymax(as, f) {
   var m = as[0], fm = f(as[0]);
   as.forEach(function(a) {var fa = f(a); if (fa > fm) {m = a; fm = fa}});
@@ -140,7 +143,7 @@ force.on("tick", function(e) {
     var p1 = link.source, p2 = link.target;
     var v = [p2.x-p1.x, p2.y-p1.y];
     var orthonormal = mymax(angles, function(x) {return dp(x, v);});
-    var mp = midpoint([p1.x,p1.y],[p2.x,p2.y]);
+    var mp = midpoint(vec(p1),vec(p2));
     var adjust = scale(norm(v)/2, orthonormal);
     p1.x += (mp[0] - adjust[0] - p1.x) * k;
     p1.y += (mp[1] - adjust[1] - p1.y) * k;
