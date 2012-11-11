@@ -190,6 +190,7 @@ svg.on("mousemove", function() {
         nodes.splice(nodes.indexOf(a), 1);
         nodes.splice(nodes.indexOf(b), 1);
         links.splice(links.indexOf(link), 1);
+        force.start();
       })
       .remove();
 
