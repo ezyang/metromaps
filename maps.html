@@ -6,9 +6,48 @@
   </head>
   <body>
     <script>
+//d3.ns.prefix.gml = "http://graphml.graphdrawing.org/xmlns";
+
+String.prototype.trim=function(){return this.replace(/^\s\s*/, '').replace(/\s\s*$/, '');};
+
 d3.xml("greek2.graphml", function(doc) {
-  console.log(doc);
+  var data = [];
+  var format = d3.time.format("%d/%m/%Y");
+  d3.select(doc).selectAll("node").each(function () {
+    var e = d3.select(this);
+    data.push({
+      label: e.select("data[key='label']").text().trim(),
+      date: format.parse(e.select("data[key='date']").text().trim()),
+      sx: parseInt(e.select("data[key='x']").text()),
+      sy: parseInt(e.select("data[key='y']").text()),
+      id: e.attr("id")
+    });
+  });
+  console.log(data);
 });
+
+var margin = {top: 30, right: 200, bottom: 40, left: 50},
+    width = 800 - margin.right - margin.left,
+    height = 500 - margin.top - margin.bottom;
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.right + margin.left)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var force = d3.layout.force()
+    /*.nodes(nodes)
+    .links(links)*/
+    .size([width, height]);
+
+force.on("tick", function() {
+  svg.selectAll("circle")
+    .attr("cx", function(d) { return d.x; })
+    .attr("cy", function(d) { return d.y; });
+});
+
+force.start();
     </script>
   </body>
 </html>
