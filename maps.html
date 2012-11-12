@@ -10,6 +10,42 @@
 
 String.prototype.trim=function(){return this.replace(/^\s\s*/, '').replace(/\s\s*$/, '');};
 
+// --- mini vector library --------------------------------------------
+// vectors are arrays [x,y] (2-dimensional)
+// I cannae believe D3.js has no vector operations
+
+var octilinear = function() {
+  var x = 1/Math.sqrt(2);
+  return [[1,0],[x,x],[0,1],[-x,x],[-1,0],[-x,-x],[0,-1],[x,-x]]
+}();
+
+function dot(v1, v2) { // V -> V -> R
+  return v1[0] * v2[0] + v1[1] * v2[1];
+}
+function centroid(vs) { // [V] -> V
+  function c(i) { return d3.sum(vs, function(v) {return v[i]})/vs.length; }
+  return [c(0), c(1)];
+}
+function scale(k, v) { // R -> V -> V
+  return [k*v[0], k*v[1]];
+}
+function norm(v) { // V -> R (Euclidean)
+  return Math.sqrt(v[0]*v[0]+v[1]*v[1]);
+}
+function vec(p) { // {x:R, y:R} -> V
+  return [p.x,p.y];
+}
+function vec2(p1,p2) { // {x:R, y:R} -> {x:R, y:R} -> V (from p1 to p2)
+  return [p2.x-p1.x, p2.y-p1.y];
+}
+function maxr(as, f) { // returns the value that is max by f (not f(v))
+  var m = as[0], fm = f(as[0]);
+  as.forEach(function(a) {var fa = f(a); if (fa > fm) {m = a; fm = fa}});
+  return m;
+}
+
+// --------------------------------------------------------------------
+
 var nodetable = {}
 var nodes = [];
 var links = [];
@@ -59,6 +95,16 @@ var svg = d3.select("body").append("svg")
     .attr("tranodesform", "tranodeslate(" + margin.left + "," + margin.top + ")");
 
 function run() {
+
+  var force = d3.layout.force()
+      .nodes(nodes)
+      .links(links)
+      .charge(-40)
+      .gravity(0.1)
+      .linkStrength(0)
+      //.friction(0.2)
+      .size([width, height]);
+
   svg.selectAll("circle")
     .data(nodes)
     .enter()
@@ -67,7 +113,8 @@ function run() {
     .attr("stroke", "#000")
     .attr("stroke-width", 2)
     .attr("cx", function(d) { return d.x; })
-    .attr("cy", function(d) { return d.y; });
+    .attr("cy", function(d) { return d.y; })
+    .call(force.drag);
 
   svg.selectAll("line")
     .data(links)
@@ -76,12 +123,24 @@ function run() {
     .style("stroke", "#000")
     .style("stroke-width: 1.5px");
 
-  var force = d3.layout.force()
-      .nodes(nodes)
-      .links(links)
-      .size([width, height]);
-
   force.on("tick", function() {
+    // enforce octilinearity (hard constraint)
+    // XXX: TODO, should only be hard constraint when not editing.
+    links.forEach(function(link) {
+      // discover the closest octilinear direction (dir is
+      // the orthonormal vector for that direction), and then
+      // calculate the new link by rotating around the centroid
+      // to align with that direction.)
+      var v = vec2(link.source, link.target);
+      var dir = maxr(octilinear, function(x) {return dot(x,v)});
+      var center = centroid([vec(link.source), vec(link.target)]);
+      var ray = scale(norm(v)/2, dir);
+      link.source.x = center[0] - ray[0];
+      link.source.y = center[1] - ray[1];
+      link.target.x = center[0] + ray[0];
+      link.target.y = center[1] + ray[1];
+    });
+    // redraw
     svg.selectAll("circle")
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; });
