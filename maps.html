@@ -101,7 +101,7 @@ function run() {
       .links(links)
       .charge(-120)
       .gravity(0.1)
-      .linkStrength(0)
+      .linkStrength(1) // still not sure what the right parameter for this is
       //.friction(0.2)
       .size([width, height]);
 
@@ -124,9 +124,9 @@ function run() {
     .style("stroke", "#000")
     .style("stroke-width", 7);
 
-  force.on("tick", function() {
+  force.on("tick", function(e) {
     // enforce octilinearity (hard constraint)
-    // XXX: TODO, should only be hard constraint when not editing.
+    var k = (0.1 - e.alpha) * 10; // INVERSE! XXX do this with a proper scale
     links.forEach(function(link) {
       // discover the closest octilinear direction (dir is
       // the orthonormal vector for that direction), and then
@@ -136,10 +136,10 @@ function run() {
       var dir = maxr(octilinear, function(x) {return dot(x,v)});
       var center = centroid([vec(link.source), vec(link.target)]);
       var ray = scale(norm(v)/2, dir);
-      link.source.x = center[0] - ray[0];
-      link.source.y = center[1] - ray[1];
-      link.target.x = center[0] + ray[0];
-      link.target.y = center[1] + ray[1];
+      link.source.x += (center[0] - ray[0] - link.source.x) * k;
+      link.source.y += (center[1] - ray[1] - link.source.y) * k;
+      link.target.x += (center[0] + ray[0] - link.target.x) * k;
+      link.target.y += (center[1] + ray[1] - link.target.y) * k;
     });
     // redraw
     svg.selectAll("circle")
