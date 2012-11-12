@@ -15,7 +15,6 @@ var nodes = [];
 var links = [];
 d3.xml("greek2.graphml", function(doc) {
   var format = d3.time.format("%d/%m/%Y");
-  var i = 0;
   // TODO: The first step is to simplify our graph by removing all
   // straight line segments of the graph.  The end result
   // should be a new list of key nodes (nodes with adjacent edge
@@ -28,17 +27,15 @@ d3.xml("greek2.graphml", function(doc) {
   d3.select(doc).selectAll("node").each(function () {
     var e = d3.select(this);
     var id = e.attr("id");
-    nodetable[id] = i;
-    nodes.push({
+    var node = {
       label: e.select("data[key='label']").text().trim(),
       date: format.parse(e.select("data[key='date']").text().trim()),
       sx: parseInt(e.select("data[key='x']").text()),
       sy: parseInt(e.select("data[key='y']").text()),
-      index: i,
-    });
-    i++;
+    };
+    nodetable[id] = node;
+    nodes.push(node);
   });
-  /*
   d3.select(doc).selectAll("edge").each(function () {
     var e = d3.select(this);
     var n1 = e.attr("source");
@@ -48,7 +45,6 @@ d3.xml("greek2.graphml", function(doc) {
       target: nodetable[n2]
     })
   });
-  */
   run();
 });
 
@@ -73,6 +69,13 @@ function run() {
     .attr("cx", function(d) { return d.x; })
     .attr("cy", function(d) { return d.y; });
 
+  svg.selectAll("line")
+    .data(links)
+    .enter()
+    .insert("line", "circle")
+    .style("stroke", "#000")
+    .style("stroke-width: 1.5px");
+
   var force = d3.layout.force()
       .nodes(nodes)
       .links(links)
@@ -82,6 +85,11 @@ function run() {
     svg.selectAll("circle")
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; });
+    svg.selectAll("line")
+      .attr("x1", function(d) { return d.source.x; })
+      .attr("y1", function(d) { return d.source.y; })
+      .attr("x2", function(d) { return d.target.x; })
+      .attr("y2", function(d) { return d.target.y; });
   });
 
   force.start();
