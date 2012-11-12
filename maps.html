@@ -99,7 +99,7 @@ function run() {
   var force = d3.layout.force()
       .nodes(nodes)
       .links(links)
-      .charge(-40)
+      .charge(-120)
       .gravity(0.1)
       .linkStrength(0)
       //.friction(0.2)
@@ -109,9 +109,10 @@ function run() {
     .data(nodes)
     .enter()
     .append("circle")
-    .attr("r", 3)
+    .attr("r", 8)
     .attr("stroke", "#000")
-    .attr("stroke-width", 2)
+    .attr("stroke-width", 3)
+    .attr("fill", "#FFF")
     .attr("cx", function(d) { return d.x; })
     .attr("cy", function(d) { return d.y; })
     .call(force.drag);
@@ -121,7 +122,7 @@ function run() {
     .enter()
     .insert("line", "circle")
     .style("stroke", "#000")
-    .style("stroke-width: 1.5px");
+    .style("stroke-width", 7);
 
   force.on("tick", function() {
     // enforce octilinearity (hard constraint)
