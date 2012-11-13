@@ -68,6 +68,7 @@ d3.xml("greek2.graphml", function(doc) {
       date: format.parse(e.select("data[key='date']").text().trim()),
       sx: parseInt(e.select("data[key='x']").text()),
       sy: parseInt(e.select("data[key='y']").text()),
+      fixed: 0,
     };
     nodetable[id] = node;
     nodes.push(node);
@@ -105,17 +106,47 @@ function run() {
       //.friction(0.2)
       .size([width, height]);
 
+  function dragmove(d) {
+    var dx = d3.event.x - d.px;
+    var dy = d3.event.y - d.py;
+    if (d.fixed & 1) {
+      nodes.forEach(function(node) {
+        if (node.fixed & 1) {
+          node.px += dx;
+          node.py += dy;
+        }
+      });
+    } else {
+      d.px += dx;
+      d.py += dy;
+    }
+    force.resume();
+  }
+  // Cribbed from the original drag source.
+  var drag = d3.behavior.drag()
+        .origin(function(d) {return d})
+        .on("dragstart", function(d) {d.fixed |= 2})
+        .on("drag", dragmove)
+        .on("dragend", function(d) {d.fixed &= 1});
+
+  mydrag = function() {
+    this.on("mouseover.force", function(d) {d.fixed |= 4})
+        .on("mouseout.force", function(d) {d.fixed &= 3})
+        .call(drag);
+  };
+
   svg.selectAll("circle")
     .data(nodes)
     .enter()
     .append("circle")
     .attr("r", 8)
-    .attr("stroke", "#000")
+    .attr("stroke", function (d) { return d.fixed ? "#EEE" : "#000" })
     .attr("stroke-width", 3)
     .attr("fill", "#FFF")
     .attr("cx", function(d) { return d.x; })
     .attr("cy", function(d) { return d.y; })
-    .call(force.drag);
+    .call(mydrag)
+    .on("dblclick", function(d) { d.fixed = !d.fixed; });
 
   svg.selectAll("line")
     .data(links)
@@ -135,16 +166,34 @@ function run() {
       // calculate the new link by rotating around the centroid
       // to align with that direction.)
       var v = vec2(link.source, link.target);
+      // XXX how to stop overlapping? Disqualify directions which already have
+      // existing nodes on them by keeping a bitmap on nodes;
+      // "first come first serve"
+      //    Maybe don't like: charge should be enough!
       var dir = maxr(octilinear, function(x) {return dot(x,v)});
-      var center = centroid([vec(link.source), vec(link.target)]);
-      var ray = scale(norm(v)/2, dir);
-      link.source.x += (center[0] - ray[0] - link.source.x) * k;
-      link.source.y += (center[1] - ray[1] - link.source.y) * k;
-      link.target.x += (center[0] + ray[0] - link.target.x) * k;
-      link.target.y += (center[1] + ray[1] - link.target.y) * k;
+      // XXX refactor me, extra lines for handling 'fixed' nodes
+      if (link.source.fixed & 1) {
+        var center = vec(link.source);
+        var ray = scale(norm(v), dir);
+        link.target.x += (center[0] + ray[0] - link.target.x) * k;
+        link.target.y += (center[1] + ray[1] - link.target.y) * k;
+      } else if (link.target.fixed & 1) {
+        var center = vec(link.target);
+        var ray = scale(norm(v), dir);
+        link.source.x += (center[0] - ray[0] - link.source.x) * k;
+        link.source.y += (center[1] - ray[1] - link.source.y) * k;
+      } else {
+        var center = centroid([vec(link.source), vec(link.target)]);
+        var ray = scale(norm(v)/2, dir);
+        link.source.x += (center[0] - ray[0] - link.source.x) * k;
+        link.source.y += (center[1] - ray[1] - link.source.y) * k;
+        link.target.x += (center[0] + ray[0] - link.target.x) * k;
+        link.target.y += (center[1] + ray[1] - link.target.y) * k;
+      }
     });
     // redraw
     svg.selectAll("circle")
+      .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; });
     svg.selectAll("line")
