@@ -129,13 +129,17 @@ function run() {
         if (node.fixed & 1) {
           node.px += dx;
           node.py += dy;
+          node.x = node.px;
+          node.y = node.py;
         }
       });
     } else {
       d.px += dx;
       d.py += dy;
+      d.x = d.px;
+      d.y = d.py;
     }
-    force.resume();
+    maybeResume();
   }
   // Cribbed from the original drag source.
   var drag = d3.behavior.drag()
@@ -191,8 +195,8 @@ function run() {
       var v = vec2(link.source, link.target);
       // XXX how to stop overlapping? Disqualify directions which already have
       // existing nodes on them by keeping a bitmap on nodes;
-      // "first come first serve"
-      //    Maybe don't like: charge should be enough!
+      // "first come first serve" --> no, this is not stable
+      // XXX this should respect friction
       var dir = maxr(octilinear, function(x) {return dot(x,v)});
       // XXX refactor me, extra lines for handling 'fixed' nodes
       if (link.source.fixed & 1) {
@@ -214,6 +218,10 @@ function run() {
         link.target.y += (center[1] + ray[1] - link.target.y) * k;
       }
     });
+    redraw();
+  });
+
+  function redraw() {
     // redraw
     svg.selectAll("circle")
       .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
@@ -224,12 +232,16 @@ function run() {
       .attr("y1", function(d) { return d.source.y; })
       .attr("x2", function(d) { return d.target.x; })
       .attr("y2", function(d) { return d.target.y; });
-  });
+  }
 
   force.start();
 
   function maybeResume() {
-    if (!$("#pause-toggle").val()) force.resume();
+    if (!$("#pause-toggle").is(':checked')) {
+      force.resume();
+    } else {
+      redraw();
+    }
   }
   $("#charge-slider").slider({
     min: 0,
