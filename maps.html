@@ -118,7 +118,6 @@ function run() {
       .gravity(0.1)
       .linkStrength(1) // still not sure what the right parameter for this is
       .linkDistance(40)
-      //.friction(0.2)
       .size([width, height]);
 
   function dragmove(d) {
@@ -129,6 +128,7 @@ function run() {
         if (node.fixed & 1) {
           node.px += dx;
           node.py += dy;
+          // Also set x,y for when force updating is turned off
           node.x = node.px;
           node.y = node.py;
         }
@@ -136,6 +136,7 @@ function run() {
     } else {
       d.px += dx;
       d.py += dy;
+      // ditto
       d.x = d.px;
       d.y = d.py;
     }
@@ -159,7 +160,7 @@ function run() {
     .enter()
     .append("circle")
     .attr("r", 8)
-    .attr("stroke", function (d) { return d.fixed ? "#EEE" : "#000" })
+    .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
     .attr("stroke-width", 3)
     .attr("fill", "#FFF")
     .attr("cx", function(d) { return d.x; })
@@ -182,9 +183,11 @@ function run() {
     $("#alpha-slider").slider("value", e.alpha);
     $("#alpha-readout").text(e.alpha);
     // enforce octilinearity (hard constraint)
+    // XXX but don't enforce it at the very beginning (first)
+    // this is kind of complicated
     var k = first ? 0 : octoscale(e.alpha);
     if (e.alpha < 0.015 && first) {
-        //force.gravity(0.001); // turn it off
+        //force.gravity(0.001); // turn it off? has funny effects
         force.resume();
         first = false;
         return;
@@ -195,9 +198,8 @@ function run() {
       // calculate the new link by rotating around the centroid
       // to align with that direction.)
       var v = vec2(link.source, link.target);
-      // XXX how to stop overlapping? Disqualify directions which already have
-      // existing nodes on them by keeping a bitmap on nodes;
-      // "first come first serve" --> no, this is not stable
+      // XXX how to stop overlapping?  nudging the edge too far is
+      // not stable...
       // XXX this should respect friction
       var dir = maxr(octilinear, function(x) {return dot(x,v)});
       // XXX refactor me, extra lines for handling 'fixed' nodes
@@ -239,6 +241,7 @@ function run() {
   force.start();
 
   function maybeResume() {
+    // don't resume if paused
     if (!$("#pause-toggle").is(':checked')) {
       force.resume();
     } else {
@@ -281,7 +284,7 @@ function run() {
     min: 0,
     max: 1,
     step: 0.01,
-    value: force.linkStrength()(),
+    value: force.linkStrength()(), // XXX weird bug https://github.com/mbostock/d3/issues/895
     slide: function(e, ui) {
       force.linkStrength(ui.value);
       $("#link-strength-readout").text(ui.value);
@@ -291,7 +294,7 @@ function run() {
   $("#link-distance-slider").slider({
     min: 0,
     max: 80,
-    value: force.linkDistance()(),
+    value: force.linkDistance()(), // XXX weird bug (see above)
     slide: function(e, ui) {
       force.linkDistance(ui.value);
       $("#link-distance-readout").text(ui.value);
