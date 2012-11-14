@@ -2,7 +2,10 @@
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css" />
     <script src="http://d3js.org/d3.v2.js"></script>
+    <script src="http://code.jquery.com/jquery-1.8.2.js"></script>
+    <script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
   </head>
   <body>
     <script>
@@ -101,6 +104,8 @@ var svg = d3.select("body").append("svg")
 
 function run() {
 
+  var first = true; // don't enforce octilinearity to get good layout
+
   var force = d3.layout.force()
       .nodes(nodes)
       .links(links)
@@ -163,12 +168,12 @@ function run() {
   // XXX if the range here starts at 0.2, we get "snap" motion of
   // the metro map, but the force layout doesn't do as well.
   var octoscale = d3.scale.linear().domain([0.1,0]).range([0,1]);
-  var first = true; // don't enforce octilinearity to get good layout
 
   force.on("tick", function(e) {
     // enforce octilinearity (hard constraint)
     var k = first ? 0 : octoscale(e.alpha);
     if (e.alpha < 0.015 && first) {
+        //force.gravity(0.001); // turn it off
         force.resume();
         first = false;
         return;
@@ -217,7 +222,23 @@ function run() {
   });
 
   force.start();
+
+  $("#clear-fixed-button").click(function() {nodes.forEach(function(n) {n.fixed = 0;})});
+  $("#resume-button").click(function() {force.resume()});
+  $("#stop-button").click(function() {force.stop()});
+  $("#tick-button").click(function() {force.tick()});
 }
     </script>
+    <div id="controls">
+      <div>Charge: <div id="charge-slider"/></div>
+      <div>Gravity: <div id="gravity-slider"/></div>
+      <div>Friction: <div id="friction-slider"/></div>
+      <div>Link strength: <div id="link-strength-slider"/></div>
+      <div>Link distance: <div id="link-distance-slider"/></div>
+      <button id="clear-fixed-button">Clear fixed</button>
+      <button id="resume-button">Resume</button>
+      <button id="stop-button">Stop</button>
+      <button id="tick-button">Tick</button>
+    </div>
   </body>
 </html>
