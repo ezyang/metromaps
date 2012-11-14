@@ -6,6 +6,9 @@
     <script src="http://d3js.org/d3.v2.js"></script>
     <script src="http://code.jquery.com/jquery-1.8.2.js"></script>
     <script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+    <style>
+      td {padding: 0 1em;}
+    </style>
   </head>
   <body>
     <script>
@@ -225,7 +228,7 @@ function run() {
   force.start();
 
   function maybeResume() {
-    if (!$("#pause-toggle").checked) force.resume();
+    if (!$("#pause-toggle").val()) force.resume();
   }
   $("#charge-slider").slider({
     min: 0,
@@ -233,6 +236,7 @@ function run() {
     value: -force.charge(),
     slide: function(e, ui) {
       force.charge(-ui.value);
+      $("#charge-readout").text(-ui.value);
       maybeResume();
     },
   });
@@ -243,6 +247,7 @@ function run() {
     value: force.gravity(),
     slide: function(e, ui) {
       force.gravity(ui.value);
+      $("#gravity-readout").text(ui.value);
       maybeResume();
     },
   });
@@ -253,6 +258,7 @@ function run() {
     value: force.friction(),
     slide: function(e, ui) {
       force.friction(ui.value);
+      $("#friction-readout").text(ui.value);
       maybeResume();
     },
   });
@@ -263,6 +269,7 @@ function run() {
     value: force.linkStrength()(),
     slide: function(e, ui) {
       force.linkStrength(ui.value);
+      $("#link-strength-readout").text(ui.value);
       force.start(); // special treatment
     },
   });
@@ -272,9 +279,15 @@ function run() {
     value: force.linkDistance()(),
     slide: function(e, ui) {
       force.linkDistance(ui.value);
+      $("#link-distance-readout").text(ui.value);
       force.start(); // special treatment (ditto)
     },
   });
+  $("#charge-readout").text(force.charge());
+  $("#gravity-readout").text(force.gravity());
+  $("#friction-readout").text(force.friction());
+  $("#link-strength-readout").text(force.linkStrength()());
+  $("#link-distance-readout").text(force.linkDistance()());
   $("#clear-fixed-button").click(function() {nodes.forEach(function(n) {n.fixed = 0;})});
   $("#resume-button").click(function() {force.resume(); $("#pause-toggle").prop('checked', false).button("refresh");});
   var oldalpha = 0.1;
@@ -292,14 +305,14 @@ function run() {
 }
     </script>
     <div id="controls">
-      <table>
-        <tr><td>Charge</td><td width="400px"><div id="charge-slider"/></td></tr>
-        <tr><td>Gravity</td><td><div id="gravity-slider"/></td></tr>
-        <tr><td>Friction</td><td><div id="friction-slider"/></td></tr>
-        <tr><td>Link strength</td><td><div id="link-strength-slider"/></td></tr>
-        <tr><td>Link distance</td><td><div id="link-distance-slider"/></td></tr>
+      <table id="sliders">
+        <tr><td>Charge</td><td width="400px"><div id="charge-slider"/></td><td id="charge-readout"></td></tr>
+        <tr><td>Gravity</td><td><div id="gravity-slider"/></td><td id="gravity-readout"></td></tr>
+        <tr><td>Friction</td><td><div id="friction-slider"/></td><td id="friction-readout"></td></tr>
+        <tr><td>Link strength</td><td><div id="link-strength-slider"/></td><td id="link-strength-readout"></td></tr>
+        <tr><td>Link distance</td><td><div id="link-distance-slider"/></td><td id="link-distance-readout"></td></tr>
       </table>
-      <div><label for="pause-toggle">Pause</label><input type="checkbox" id="pause-toggle" /></div>
+      <label for="pause-toggle">Pause</label><input type="checkbox" id="pause-toggle" />
       <button id="clear-fixed-button">Clear fixed</button>
       <button id="resume-button">Restart</button>
       <button id="stop-button">Stop</button>
