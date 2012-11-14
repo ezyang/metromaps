@@ -179,6 +179,8 @@ function run() {
   var octoscale = d3.scale.linear().domain([0.1,0]).range([0,1]);
 
   force.on("tick", function(e) {
+    $("#alpha-slider").slider("value", e.alpha);
+    $("#alpha-readout").text(e.alpha);
     // enforce octilinearity (hard constraint)
     var k = first ? 0 : octoscale(e.alpha);
     if (e.alpha < 0.015 && first) {
@@ -296,6 +298,17 @@ function run() {
       force.start(); // special treatment (ditto)
     },
   });
+  $("#alpha-slider").slider({
+    min: 0,
+    max: 0.1,
+    step: 0.00001,
+    value: 0.1,
+    slide: function(e, ui) {
+      force.alpha(ui.value);
+      $("#alpha-readout").text(ui.value);
+    },
+  });
+  // XXX bleh
   $("#charge-readout").text(force.charge());
   $("#gravity-readout").text(force.gravity());
   $("#friction-readout").text(force.friction());
@@ -324,6 +337,7 @@ function run() {
         <tr><td>Friction</td><td><div id="friction-slider"/></td><td id="friction-readout"></td></tr>
         <tr><td>Link strength</td><td><div id="link-strength-slider"/></td><td id="link-strength-readout"></td></tr>
         <tr><td>Link distance</td><td><div id="link-distance-slider"/></td><td id="link-distance-readout"></td></tr>
+            <tr><td>Alpha</td><td><div id="alpha-slider"/></td><td id="alpha-readout"></td></tr>
       </table>
       <label for="pause-toggle">Pause</label><input type="checkbox" id="pause-toggle" />
       <button id="clear-fixed-button">Clear fixed</button>
