@@ -102,11 +102,12 @@ var svg = d3.select("body").append("svg")
   .append("g")
     .attr("tranodesform", "tranodeslate(" + margin.left + "," + margin.top + ")");
 
+var force;
 function run() {
 
   var first = true; // don't enforce octilinearity to get good layout
 
-  var force = d3.layout.force()
+  force = d3.layout.force()
       .nodes(nodes)
       .links(links)
       .charge(-100)
@@ -223,13 +224,16 @@ function run() {
 
   force.start();
 
+  function maybeResume() {
+    if (!$("#pause-toggle").checked) force.resume();
+  }
   $("#charge-slider").slider({
     min: 0,
     max: 600,
     value: -force.charge(),
     slide: function(e, ui) {
       force.charge(-ui.value);
-      if (!$("#pause-toggle").checked) force.resume();
+      maybeResume();
     },
   });
   $("#gravity-slider").slider({
@@ -239,7 +243,7 @@ function run() {
     value: force.gravity(),
     slide: function(e, ui) {
       force.gravity(ui.value);
-      if (!$("#pause-toggle").checked) force.resume();
+      maybeResume();
     },
   });
   $("#friction-slider").slider({
@@ -249,7 +253,26 @@ function run() {
     value: force.friction(),
     slide: function(e, ui) {
       force.friction(ui.value);
-      if (!$("#pause-toggle").checked) force.resume();
+      maybeResume();
+    },
+  });
+  $("#link-strength-slider").slider({
+    min: 0,
+    max: 1,
+    step: 0.01,
+    value: force.linkStrength()(),
+    slide: function(e, ui) {
+      force.linkStrength(ui.value);
+      force.start(); // special treatment
+    },
+  });
+  $("#link-distance-slider").slider({
+    min: 0,
+    max: 80,
+    value: force.linkDistance()(),
+    slide: function(e, ui) {
+      force.linkDistance(ui.value);
+      force.start(); // special treatment (ditto)
     },
   });
   $("#clear-fixed-button").click(function() {nodes.forEach(function(n) {n.fixed = 0;})});
