@@ -160,13 +160,19 @@ function run() {
     .style("stroke", "#000")
     .style("stroke-width", 7);
 
-  var octoscale = d3.scale.linear().domain([0.1,0]).range([0.2,1]);
+  // XXX if the range here starts at 0.2, we get "snap" motion of
+  // the metro map, but the force layout doesn't do as well.
+  var octoscale = d3.scale.linear().domain([0.1,0]).range([0,1]);
   var first = true; // don't enforce octilinearity to get good layout
 
   force.on("tick", function(e) {
     // enforce octilinearity (hard constraint)
     var k = first ? 0 : octoscale(e.alpha);
-    if (e.alpha < 0.015) { first = false; }
+    if (e.alpha < 0.015 && first) {
+        force.resume();
+        first = false;
+        return;
+    }
     links.forEach(function(link) {
       // discover the closest octilinear direction (dir is
       // the orthonormal vector for that direction), and then
