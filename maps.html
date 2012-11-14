@@ -223,20 +223,62 @@ function run() {
 
   force.start();
 
+  $("#charge-slider").slider({
+    min: 0,
+    max: 600,
+    value: -force.charge(),
+    slide: function(e, ui) {
+      force.charge(-ui.value);
+      if (!$("#pause-toggle").checked) force.resume();
+    },
+  });
+  $("#gravity-slider").slider({
+    min: 0,
+    max: 0.3,
+    step: 0.01,
+    value: force.gravity(),
+    slide: function(e, ui) {
+      force.gravity(ui.value);
+      if (!$("#pause-toggle").checked) force.resume();
+    },
+  });
+  $("#friction-slider").slider({
+    min: 0,
+    max: 1,
+    step: 0.01,
+    value: force.friction(),
+    slide: function(e, ui) {
+      force.friction(ui.value);
+      if (!$("#pause-toggle").checked) force.resume();
+    },
+  });
   $("#clear-fixed-button").click(function() {nodes.forEach(function(n) {n.fixed = 0;})});
-  $("#resume-button").click(function() {force.resume()});
+  $("#resume-button").click(function() {force.resume(); $("#pause-toggle").prop('checked', false).button("refresh");});
+  var oldalpha = 0.1;
+  $("#pause-toggle").button();
+  $("#pause-toggle").change(function() {
+    if (this.checked) {
+      oldalpha = force.alpha();
+      force.stop();
+    } else {
+      force.alpha(oldalpha);
+    }
+  });
   $("#stop-button").click(function() {force.stop()});
   $("#tick-button").click(function() {force.tick()});
 }
     </script>
     <div id="controls">
-      <div>Charge: <div id="charge-slider"/></div>
-      <div>Gravity: <div id="gravity-slider"/></div>
-      <div>Friction: <div id="friction-slider"/></div>
-      <div>Link strength: <div id="link-strength-slider"/></div>
-      <div>Link distance: <div id="link-distance-slider"/></div>
+      <table>
+        <tr><td>Charge</td><td width="400px"><div id="charge-slider"/></td></tr>
+        <tr><td>Gravity</td><td><div id="gravity-slider"/></td></tr>
+        <tr><td>Friction</td><td><div id="friction-slider"/></td></tr>
+        <tr><td>Link strength</td><td><div id="link-strength-slider"/></td></tr>
+        <tr><td>Link distance</td><td><div id="link-distance-slider"/></td></tr>
+      </table>
+      <div><label for="pause-toggle">Pause</label><input type="checkbox" id="pause-toggle" /></div>
       <button id="clear-fixed-button">Clear fixed</button>
-      <button id="resume-button">Resume</button>
+      <button id="resume-button">Restart</button>
       <button id="stop-button">Stop</button>
       <button id="tick-button">Tick</button>
     </div>
