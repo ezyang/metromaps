@@ -63,11 +63,15 @@ d3.xml("greek2.graphml", function(doc) {
   d3.select(doc).selectAll("node").each(function () {
     var e = d3.select(this);
     var id = e.attr("id");
+    var sx = parseInt(e.select("data[key='x']").text()),
+        sy = parseInt(e.select("data[key='y']").text());
     var node = {
       label: e.select("data[key='label']").text().trim(),
       date: format.parse(e.select("data[key='date']").text().trim()),
-      sx: parseInt(e.select("data[key='x']").text()),
-      sy: parseInt(e.select("data[key='y']").text()),
+      sx: sx,
+      sy: sy,
+      //x: sx/100,
+      //y: sy+200,
       fixed: 0,
     };
     nodetable[id] = node;
@@ -100,10 +104,10 @@ function run() {
   var force = d3.layout.force()
       .nodes(nodes)
       .links(links)
-      .charge(-120)
+      .charge(-100)
       .gravity(0.1)
       .linkStrength(1) // still not sure what the right parameter for this is
-      .linkDistance(50)
+      .linkDistance(40)
       //.friction(0.2)
       .size([width, height]);
 
@@ -156,11 +160,13 @@ function run() {
     .style("stroke", "#000")
     .style("stroke-width", 7);
 
-  var octoscale = d3.scale.linear().domain([0.1,0]).range([0.3, 1]);
+  var octoscale = d3.scale.linear().domain([0.1,0]).range([0.2,1]);
+  var first = true; // don't enforce octilinearity to get good layout
 
   force.on("tick", function(e) {
     // enforce octilinearity (hard constraint)
-    var k = octoscale(e.alpha);
+    var k = first ? 0 : octoscale(e.alpha);
+    if (e.alpha < 0.015) { first = false; }
     links.forEach(function(link) {
       // discover the closest octilinear direction (dir is
       // the orthonormal vector for that direction), and then
