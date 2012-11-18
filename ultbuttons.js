@@ -53,14 +53,14 @@
 						if (inversechecked) $this.addClass('ui-state-active');
 						else $this.removeClass('ui-state-active');
 						$this.attr('aria-pressed', inversechecked);
-						$ch.trigger('change');
+						$ch.fireEvent('change');
 					} else if (ch.type === 'radio' && !ch.checked) {
 						ch.checked = true;
 						$('input[type="radio"][name="' + ch.name + '"]').not(ch).each(function() {
 							$('label[for="' + this.id + '"]').removeClass('ui-state-active').attr('aria-pressed', false);
 						});
 						$this.addClass('ui-state-active').attr('aria-pressed', true);
-						$ch.trigger('change');
+						$ch.fireEvent('change');
 					}
 				}
 			}, 0);

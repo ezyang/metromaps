@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <link rel="stylesheet" href="jquery-ui.css" />
+        <script src="jquery-1.8.2.js"></script>
+        <script src="jquery-ui.js"></script>
+        <script src="jquery.fireEvent.js"></script> <!-- fix D3/jQuery interoperability issues -->
+        <script src="ultbuttons.js"></script> <!-- fix jQuery UI bug with checkbox buttons -->
+    </head>
+    <body>
+        <div id="box">
+            <input type="radio" name="rb" value="0" id="radio1" /><label for="radio1">R1</label>
+            <input type="radio" name="rb" value="1" id="radio2" /><label for="radio2">R2</label>
+            <input type="radio" name="rb" value="2" id="radio3" /><label for="radio3">R3</label>
+        </div>
+        <script>
+            document.getElementById("radio1").addEventListener("change", function() {console.log(this.value);});
+            document.getElementById("radio2").addEventListener("change", function() {console.log(this.value);});
+            document.getElementById("radio3").addEventListener("change", function() {console.log(this.value);});
+            $("#box").buttonset();
+        </script>
+    </body>
+</html>
