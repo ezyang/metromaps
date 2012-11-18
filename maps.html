@@ -9,7 +9,7 @@
     <script src="jquery.fireEvent.js"></script> <!-- fix D3/jQuery interoperability issues -->
     <script src="ultbuttons.js"></script> <!-- fix jQuery UI bug with checkbox buttons -->
     <style>
-      #controls {vertical-align:top; width:50em;}
+      #controls {vertical-align:top; width:17em;}
       td {padding: 0 1em;}
       .ui-button {font-size:0.8em; }
       .ui-button-text-only .ui-button-text {padding: 0.1em 0.4em;}
@@ -25,6 +25,7 @@
       <tr>
         <td id="controls">
           <div id="slideshow-controls"></div>
+          <div id="slideshow-text"></div>
         </td>
         <td id="svg-container">
         </td>
@@ -126,7 +127,7 @@ d3.xml("greek2.graphml", function(doc) {
 });
 
 var margin = {top: 30, right: 200, bottom: 40, left: 50},
-    width = 800 - margin.right - margin.left,
+    width = 600 - margin.right - margin.left,
     height = 400 - margin.top - margin.bottom;
 
 var svg = d3.select("#svg-container").append("svg")
@@ -280,7 +281,11 @@ function run() {
   {
     var slideshow = d3.select("#slideshow-controls");
     var current = 0;
-    var steps = [{}, {}, {}]
+    var steps = [
+      {id: 0, title: "Non-linear narrative", text: "People think of time as a linear progression, but actually, it's more like a wibbly wobbly ball of timey wimey stuff."},
+      {id: 1, title: "Step 1", text: "First step."},
+      {id: 2, title: "Step 2", text: "Second step."},
+    ];
     var id = fresh("slideshow");
     function redrawSlideshowControls() {
       slideshow.select(".slideshow-next")
@@ -293,6 +298,17 @@ function run() {
       slideshow.selectAll(".slideshow-page input")
         .property("checked", function(_,i) {return i == current});
       slideshow.jq().buttonset("refresh");
+
+      var n = d3.select("#slideshow-text").selectAll(".text")
+        .data([steps[current]], function(d) {return d.id});
+      var text = n.enter()
+        .insert("div")
+        .attr("class", "text");
+      text.insert("h2")
+        .text(function(d) {return d.title});
+      text.insert("p")
+        .text(function(d) {return d.text});
+      n.exit().remove();
     }
     var span = slideshow.selectAll(".slideshow-page").data(steps)
       .enter()
