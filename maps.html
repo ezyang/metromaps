@@ -75,9 +75,15 @@ d3.xml("greek2.graphml", function(doc) {
     var e = d3.select(this);
     var n1 = e.attr("source");
     var n2 = e.attr("target");
+    var p = [];
+    e.select("data").each(function() {
+      // XXX assuming that none of these are FALSE
+      p.push(d3.select(this).attr("key"))
+    });
     links.push({
       source: nodetable[n1],
       target: nodetable[n2],
+      path: p,
     })
   });
   var margin = {top: 30, right: 200, bottom: 40, left: 50},

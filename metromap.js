@@ -9,6 +9,8 @@ function metromap(svg) {
     .linkStrength(1)
     .linkDistance(40);
 
+  var color = d3.scale.category10();
+
   var paused = false;
 
   // XXX if the range here starts at 0.2, we get "snap" motion of
@@ -130,7 +132,7 @@ function metromap(svg) {
       .data(force.links())
       .enter()
       .insert("line", "circle")
-      .style("stroke", "#000")
+      .style("stroke", function(d) {return color(d.path[0])})
       .style("stroke-width", 7);
 
     force.start();
