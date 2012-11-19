@@ -1,4 +1,28 @@
 function debugForce(force, selection) {
+
+  var div = selection.insert('div');
+  var pause = div.insert("input") // special support for pause
+    .attr("type", "checkbox")
+    .attr("id", "debugpause")
+    .property("checked", force.paused())
+    .on("change", function() {force.paused(this.checked)});
+  div.insert("label").attr("for", "debugpause").text("Pause");
+  var buttons =
+      [ {name: "Restart",     f: function() { pause.property("checked", false); // XXX annoying
+                                              force.paused(false);
+                                              pause.jq().button("refresh");
+                                              force.start(); } },
+        {name: "Clear fixed", f: function() { force.nodes().forEach(function(n) {n.fixed = 0;}) } },
+      ]
+  div.selectAll(".btn").data(buttons)
+    .enter()
+    .insert("button")
+    .attr('class', 'btn')
+    .on("click", function(d) {return d.f()})
+    .text(function(d) {return d.name});
+  div.jq().buttonset();
+  div.selectAll('.ui-button-text, .ui-button-text-only').style('padding-top', '0.5em').style('padding-bottom', '0.5em');
+
   var oldalpha = 0.1;
   function neg(f) {
     return function(v) {
@@ -56,25 +80,4 @@ function debugForce(force, selection) {
         widgets.filter(function (d) {return d.f == force.alpha}).each(function () {$(this).slider("value", e.alpha)});
       });
     });
-  var div = selection.insert('div');
-  var pause = div.insert("input") // special support for pause
-    .attr("type", "checkbox")
-    .attr("id", "debugpause")
-    .property("checked", force.paused())
-    .on("change", function() {force.paused(this.checked)});
-  div.insert("label").attr("for", "debugpause").text("Pause");
-  var buttons =
-      [ {name: "Restart",     f: function() { pause.property("checked", false); // XXX annoying
-                                              force.paused(false);
-                                              pause.jq().button("refresh");
-                                              force.start(); } },
-        {name: "Clear fixed", f: function() { force.nodes().forEach(function(n) {n.fixed = 0;}) } },
-      ]
-  div.selectAll(".btn").data(buttons)
-    .enter()
-    .insert("button")
-    .attr('class', 'btn')
-    .on("click", function(d) {return d.f()})
-    .text(function(d) {return d.name});
-  div.jq().buttonset();
 }
