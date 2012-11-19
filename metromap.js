@@ -118,7 +118,7 @@ function metromap(svg) {
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; })
       .call(mydrag)
-      .on("dblclick", function(d) { d.fixed = !d.fixed; });
+      .on("dblclick", function(d) { d.fixed = !d.fixed; redraw(); });
 
     // When there are multiple lines running from a station, we need
     // to offset them from the center 
