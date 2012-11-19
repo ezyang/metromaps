@@ -8,6 +8,12 @@
     <script src="jquery-ui.js"></script>
     <script src="jquery.fireEvent.js"></script> <!-- fix D3/jQuery interoperability issues -->
     <script src="ultbuttons.js"></script> <!-- fix jQuery UI bug with checkbox buttons -->
+    <!-- our stuff -->
+    <script src="vector.js"></script>
+    <script src="util.js"></script>
+    <script src="metromap.js"></script>
+    <script src="slideshow.js"></script>
+    <script src="debug.js"></script>
     <style>
       #controls {vertical-align:top; width:17em;}
       td {padding: 0 1em;}
@@ -31,62 +37,13 @@
         </td>
       </tr>
     </table>
+    <div id="debug-container"></div>
     <script>
-//d3.nodes.prefix.gml = "http://graphml.graphdrawing.org/xmlnodes";
 
-String.prototype.trim=function(){return this.replace(/^\s\s*/, '').replace(/\s\s*$/, '');};
-d3.selection.prototype.jq = function() {return $(this.node())}
-
-var freshtable = {};
-function fresh(prefix) {
-  if (!freshtable[prefix]) {
-    freshtable[prefix] = 0;
-  }
-  var id = "__" + prefix + "_" + freshtable[prefix] + "_";
-  freshtable[prefix]++;
-  return id;
-}
-
-// --- mini vector library --------------------------------------------
-// vectors are arrays [x,y] (2-dimensional)
-// I cannae believe D3.js has no vector operations
-
-var octilinear = function() {
-  var x = 1/Math.sqrt(2);
-  return [[1,0],[x,x],[0,1],[-x,x],[-1,0],[-x,-x],[0,-1],[x,-x]]
-}();
-
-function dot(v1, v2) { // V -> V -> R
-  return v1[0] * v2[0] + v1[1] * v2[1];
-}
-function centroid(vs) { // [V] -> V
-  function c(i) { return d3.sum(vs, function(v) {return v[i]})/vs.length; }
-  return [c(0), c(1)];
-}
-function scale(k, v) { // R -> V -> V
-  return [k*v[0], k*v[1]];
-}
-function norm(v) { // V -> R (Euclidean)
-  return Math.sqrt(v[0]*v[0]+v[1]*v[1]);
-}
-function vec(p) { // {x:R, y:R} -> V
-  return [p.x,p.y];
-}
-function vec2(p1,p2) { // {x:R, y:R} -> {x:R, y:R} -> V (from p1 to p2)
-  return [p2.x-p1.x, p2.y-p1.y];
-}
-function maxr(as, f) { // returns the value that is max by f (not f(v))
-  var m = as[0], fm = f(as[0]);
-  as.forEach(function(a) {var fa = f(a); if (fa > fm) {m = a; fm = fa}});
-  return m;
-}
-
-// --------------------------------------------------------------------
-
-var nodetable = {}
-var nodes = [];
-var links = [];
 d3.xml("greek2.graphml", function(doc) {
+  var nodetable = {}
+  var nodes = [];
+  var links = [];
   var format = d3.time.format("%d/%m/%Y");
   // TODO: The first step is to simplify our graph by removing all
   // straight line segments of the graph.  The end result
@@ -120,330 +77,28 @@ d3.xml("greek2.graphml", function(doc) {
     var n2 = e.attr("target");
     links.push({
       source: nodetable[n1],
-      target: nodetable[n2]
+      target: nodetable[n2],
     })
   });
-  run();
+  var margin = {top: 30, right: 200, bottom: 40, left: 50},
+      width = 600 - margin.right - margin.left,
+      height = 400 - margin.top - margin.bottom;
+  svg = d3.select("#svg-container").append("svg")
+      .attr("width", width + margin.right + margin.left)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  var metro = metromap(svg)
+    .size([width, height])
+    .nodes(nodes)
+    .links(links);
+  //console.log(metro.nodes());
+
+  metro();
+  slideshow(metro)(d3.select("#slideshow-controls"), d3.select("#slideshow-text"));
+  debugForce(metro, d3.select("#debug-container"));
 });
-
-var margin = {top: 30, right: 200, bottom: 40, left: 50},
-    width = 600 - margin.right - margin.left,
-    height = 400 - margin.top - margin.bottom;
-
-var svg = d3.select("#svg-container").append("svg")
-    .attr("width", width + margin.right + margin.left)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-var force;
-
-function maybeResume() {
-  // don't resume if paused
-  if (!$("#pause-toggle").is(':checked')) {
-    force.resume();
-  } else {
-    redraw();
-  }
-}
-
-function redraw() {
-  // redraw
-  svg.selectAll("circle")
-    .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
-    .attr("cx", function(d) { return d.x; })
-    .attr("cy", function(d) { return d.y; });
-  svg.selectAll("line")
-    .attr("x1", function(d) { return d.source.x; })
-    .attr("y1", function(d) { return d.source.y; })
-    .attr("x2", function(d) { return d.target.x; })
-    .attr("y2", function(d) { return d.target.y; });
-}
-
-function run() {
-
-  var first = true; // don't enforce octilinearity to get good layout
-
-  force = d3.layout.force()
-      .nodes(nodes)
-      .links(links)
-      .charge(-100)
-      .gravity(0.1)
-      .linkStrength(1) // still not sure what the right parameter for this is
-      .linkDistance(40)
-      .size([width, height]);
-
-  function dragmove(d) {
-    var dx = d3.event.x - d.px;
-    var dy = d3.event.y - d.py;
-    if (d.fixed & 1) {
-      nodes.forEach(function(node) {
-        if (node.fixed & 1) {
-          node.px += dx;
-          node.py += dy;
-          // Also set x,y for when force updating is turned off
-          node.x = node.px;
-          node.y = node.py;
-        }
-      });
-    } else {
-      d.px += dx;
-      d.py += dy;
-      // ditto
-      d.x = d.px;
-      d.y = d.py;
-    }
-    maybeResume();
-  }
-  // Cribbed from the original drag source.
-  var drag = d3.behavior.drag()
-        .origin(function(d) {return d})
-        .on("dragstart", function(d) {d.fixed |= 2})
-        .on("drag", dragmove)
-        .on("dragend", function(d) {d.fixed &= 1});
-
-  mydrag = function() {
-    this.on("mouseover.force", function(d) {d.fixed |= 4})
-        .on("mouseout.force", function(d) {d.fixed &= 3})
-        .call(drag);
-  };
-
-  svg.selectAll("circle")
-    .data(nodes)
-    .enter()
-    .append("circle")
-    .attr("r", 8)
-    .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
-    .attr("stroke-width", 3)
-    .attr("fill", "#FFF")
-    .attr("cx", function(d) { return d.x; })
-    .attr("cy", function(d) { return d.y; })
-    .call(mydrag)
-    .on("dblclick", function(d) { d.fixed = !d.fixed; });
-
-  svg.selectAll("line")
-    .data(links)
-    .enter()
-    .insert("line", "circle")
-    .style("stroke", "#000")
-    .style("stroke-width", 7);
-
-  // XXX if the range here starts at 0.2, we get "snap" motion of
-  // the metro map, but the force layout doesn't do as well.
-  var octoscale = d3.scale.linear().domain([0.1,0]).range([0,1]);
-
-  force.on("tick", function(e) {
-    $("#alpha-slider").slider("value", e.alpha);
-    $("#alpha-readout").text(e.alpha);
-    // enforce octilinearity (hard constraint)
-    // XXX but don't enforce it at the very beginning (first)
-    // this is kind of complicated
-    var k = first ? 0 : octoscale(e.alpha);
-    if (e.alpha < 0.015 && first) {
-        //force.gravity(0.001); // turn it off? has funny effects
-        force.resume();
-        first = false;
-        return;
-    }
-    links.forEach(function(link) {
-      // discover the closest octilinear direction (dir is
-      // the orthonormal vector for that direction), and then
-      // calculate the new link by rotating around the centroid
-      // to align with that direction.)
-      var v = vec2(link.source, link.target);
-      // XXX how to stop overlapping?  nudging the edge too far is
-      // not stable...
-      // XXX this should respect friction
-      var dir = maxr(octilinear, function(x) {return dot(x,v)});
-      // XXX refactor me, extra lines for handling 'fixed' nodes
-      if (link.source.fixed & 1) {
-        var center = vec(link.source);
-        var ray = scale(norm(v), dir);
-        link.target.x += (center[0] + ray[0] - link.target.x) * k;
-        link.target.y += (center[1] + ray[1] - link.target.y) * k;
-      } else if (link.target.fixed & 1) {
-        var center = vec(link.target);
-        var ray = scale(norm(v), dir);
-        link.source.x += (center[0] - ray[0] - link.source.x) * k;
-        link.source.y += (center[1] - ray[1] - link.source.y) * k;
-      } else {
-        var center = centroid([vec(link.source), vec(link.target)]);
-        var ray = scale(norm(v)/2, dir);
-        link.source.x += (center[0] - ray[0] - link.source.x) * k;
-        link.source.y += (center[1] - ray[1] - link.source.y) * k;
-        link.target.x += (center[0] + ray[0] - link.target.x) * k;
-        link.target.y += (center[1] + ray[1] - link.target.y) * k;
-      }
-    });
-    redraw();
-  });
-
-  {
-    var slideshow = d3.select("#slideshow-controls");
-    var current = 0;
-    var steps = [
-      {id: 0, title: "Non-linear narrative", text: "People think of time as a linear progression, but actually, it's more like a wibbly wobbly ball of timey wimey stuff."},
-      {id: 1, title: "Step 1", text: "First step."},
-      {id: 2, title: "Step 2", text: "Second step."},
-    ];
-    var id = fresh("slideshow");
-    function redrawSlideshowControls() {
-      slideshow.select(".slideshow-next")
-        .attr("disabled", current == steps.length-1 ? "disabled" : null);
-      // See jQuery UI bug http://bugs.jqueryui.com/ticket/8828
-      // and http://bugs.jqueryui.com/ticket/8829
-      if (current != steps.length-1) {
-        slideshow.select(".slideshow-next").jq().button("enable").removeClass("ui-state-hover");
-      }
-      slideshow.selectAll(".slideshow-page input")
-        .property("checked", function(_,i) {return i == current});
-      slideshow.jq().buttonset("refresh");
-
-      var n = d3.select("#slideshow-text").selectAll(".text")
-        .data([steps[current]], function(d) {return d.id});
-      var text = n.enter()
-        .insert("div")
-        .attr("class", "text");
-      text.insert("h2")
-        .text(function(d) {return d.title});
-      text.insert("p")
-        .text(function(d) {return d.text});
-      n.exit().remove();
-    }
-    var span = slideshow.selectAll(".slideshow-page").data(steps)
-      .enter()
-      .insert("span")
-      .attr("class", "slideshow-page");
-    span.insert("input")
-      .attr("type", "radio")
-      .attr("name", "tutorial")
-      .attr("id", function(_,i) {return id + i})
-      .attr("value", function(_,i) {return i})
-      .on("change", function(_,i) { current = i; redrawSlideshowControls(); });
-    span.insert("label")
-      .attr("for", function(_,i) {return id + i})
-      .text(function(_,i) {return i+1;});
-    slideshow.selectAll(".slideshow-next").data([current])
-      .enter()
-      .insert("button")
-      .attr("class", "slideshow-next")
-      .on("click", function(d) {
-        current = current + 1;
-        redrawSlideshowControls();
-      })
-      .insert("b").text("Next ▸");
-    slideshow.jq().buttonset();
-    redrawSlideshowControls();
-  }
-
-  force.start();
-  setupDebug();
-}
-    </script>
-    <!-- debugging stuff -->
-    <div>
-      <table id="sliders">
-        <tr><td>Charge</td><td width="400px"><div id="charge-slider"/></td><td id="charge-readout"></td></tr>
-        <tr><td>Gravity</td><td><div id="gravity-slider"/></td><td id="gravity-readout"></td></tr>
-        <tr><td>Friction</td><td><div id="friction-slider"/></td><td id="friction-readout"></td></tr>
-        <tr><td>Link strength</td><td><div id="link-strength-slider"/></td><td id="link-strength-readout"></td></tr>
-        <tr><td>Link distance</td><td><div id="link-distance-slider"/></td><td id="link-distance-readout"></td></tr>
-            <tr><td>Alpha</td><td><div id="alpha-slider"/></td><td id="alpha-readout"></td></tr>
-      </table>
-      <div>
-        <label for="pause-toggle">Pause</label><input type="checkbox" id="pause-toggle" />
-        <button id="clear-fixed-button">Clear fixed</button>
-        <button id="resume-button">Restart</button>
-        <button id="stop-button">Stop</button>
-        <button id="tick-button">Tick</button>
-      </div>
-    </div>
-    <script>
-function setupDebug() {
-  $("#charge-slider").slider({
-    min: 0,
-    max: 600,
-    value: -force.charge(),
-    slide: function(e, ui) {
-      force.charge(-ui.value);
-      $("#charge-readout").text(-ui.value);
-      maybeResume();
-    },
-  });
-  $("#gravity-slider").slider({
-    min: 0,
-    max: 0.3,
-    step: 0.01,
-    value: force.gravity(),
-    slide: function(e, ui) {
-      force.gravity(ui.value);
-      $("#gravity-readout").text(ui.value);
-      maybeResume();
-    },
-  });
-  $("#friction-slider").slider({
-    min: 0,
-    max: 1,
-    step: 0.01,
-    value: force.friction(),
-    slide: function(e, ui) {
-      force.friction(ui.value);
-      $("#friction-readout").text(ui.value);
-      maybeResume();
-    },
-  });
-  $("#link-strength-slider").slider({
-    min: 0,
-    max: 1,
-    step: 0.01,
-    value: force.linkStrength()(), // XXX weird bug https://github.com/mbostock/d3/issues/895
-    slide: function(e, ui) {
-      force.linkStrength(ui.value);
-      $("#link-strength-readout").text(ui.value);
-      force.start(); // special treatment
-    },
-  });
-  $("#link-distance-slider").slider({
-    min: 0,
-    max: 80,
-    value: force.linkDistance()(), // XXX weird bug (see above)
-    slide: function(e, ui) {
-      force.linkDistance(ui.value);
-      $("#link-distance-readout").text(ui.value);
-      force.start(); // special treatment (ditto)
-    },
-  });
-  $("#alpha-slider").slider({
-    min: 0,
-    max: 0.1,
-    step: 0.00001,
-    value: 0.1,
-    slide: function(e, ui) {
-      force.alpha(ui.value);
-      $("#alpha-readout").text(ui.value);
-    },
-  });
-  // XXX bleh
-  $("#charge-readout").text(force.charge());
-  $("#gravity-readout").text(force.gravity());
-  $("#friction-readout").text(force.friction());
-  $("#link-strength-readout").text(force.linkStrength()());
-  $("#link-distance-readout").text(force.linkDistance()());
-  $("#clear-fixed-button").click(function() {nodes.forEach(function(n) {n.fixed = 0;})});
-  $("#resume-button").click(function() {force.resume(); $("#pause-toggle").prop('checked', false).button("refresh");});
-  var oldalpha = 0.1;
-  $("#pause-toggle").button();
-  $("#pause-toggle").change(function() {
-    if (this.checked) {
-      oldalpha = force.alpha();
-      force.stop();
-    } else {
-      force.alpha(oldalpha);
-    }
-  });
-  $("#stop-button").click(function() {force.stop()});
-  $("#tick-button").click(function() {force.tick()});
-}
     </script>
   </body>
 </html>
