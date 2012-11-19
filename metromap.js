@@ -128,11 +128,14 @@ function metromap(svg) {
       .call(mydrag)
       .on("dblclick", function(d) { d.fixed = !d.fixed; });
 
+    // When there are multiple lines running from a station, we need
+    // to offset them from the center 
+
     svg.selectAll("line")
       .data(force.links())
       .enter()
       .insert("line", "circle")
-      .style("stroke", function(d) {return color(d.path[0])})
+      .style("stroke", function(d) {return d.path.length == 1 ? color(d.path[0]) : "#000"})
       .style("stroke-width", 7);
 
     force.start();

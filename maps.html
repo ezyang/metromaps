@@ -40,7 +40,7 @@
     <div id="debug-container"></div>
     <script>
 
-d3.xml("greek2.graphml", function(doc) {
+d3.xml("haitimap2.graphml", function(doc) {
   var nodetable = {}
   var nodes = [];
   var links = [];
@@ -61,7 +61,7 @@ d3.xml("greek2.graphml", function(doc) {
         sy = parseInt(e.select("data[key='y']").text());
     var node = {
       label: e.select("data[key='label']").text().trim(),
-      date: format.parse(e.select("data[key='date']").text().trim()),
+      //date: format.parse(e.select("data[key='date']").text().trim()),
       sx: sx,
       sy: sy,
       //x: sx/100,
@@ -76,7 +76,7 @@ d3.xml("greek2.graphml", function(doc) {
     var n1 = e.attr("source");
     var n2 = e.attr("target");
     var p = [];
-    e.select("data").each(function() {
+    e.selectAll("data").each(function() {
       // XXX assuming that none of these are FALSE
       p.push(d3.select(this).attr("key"))
     });
