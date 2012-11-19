@@ -12,6 +12,7 @@ function metromap(svg) {
   var color = d3.scale.category10();
 
   var paused = false;
+  var pendingStart = false;
 
   // XXX if the range here starts at 0.2, we get "snap" motion of
   // the metro map, but the force layout doesn't do as well.
@@ -29,15 +30,6 @@ function metromap(svg) {
       .attr("y1", function(d) { return d.source.y; })
       .attr("x2", function(d) { return d.target.x; })
       .attr("y2", function(d) { return d.target.y; });
-  }
-
-  function maybeResume() {
-    // don't resume if paused
-    if (!paused) {
-      force.resume();
-    } else {
-      redraw(); // redraw in case someone dragged a node around
-    }
   }
 
   // custom implementation of dragging
@@ -149,6 +141,10 @@ function metromap(svg) {
         oldAlpha = force.alpha();
         force.stop();
       } else {
+        if (pendingStart) {
+          force.start();
+          pendingStart = false;
+        }
         force.alpha(oldAlpha);
       }
     }
@@ -163,20 +159,43 @@ function metromap(svg) {
     }
   }
 
+  function notPaused(f) {
+    return function() {
+      if (!paused) {
+        f();
+      } else {
+        redraw(); // redraw in case someone dragged a node around
+        if (f == force.start) pendingStart = true;
+      }
+      return my;
+    }
+  }
+
+  var maybeResume = notPaused(force.resume);
+
+  my.octoforce = rm(octoscale.range);
   my.nodes = rm(force.nodes);
   my.links = rm(force.links);
   my.charge = rm(force.charge);
   my.gravity = rm(force.gravity);
   my.friction = rm(force.friction);
-  my.alpha = rm(force.alpha);
   my.linkStrength = rm(force.linkStrength);
   my.linkDistance = rm(force.linkDistance);
   my.size = rm(force.size);
   my.on = rm(force.on);
-  my.start = rm(force.start);
   my.stop = rm(force.stop);
   my.tick = rm(force.tick);
-  my.resume = rm(force.resume);
+  my.alpha = function(v) {
+    if (!arguments.length) return paused ? oldAlpha : force.alpha();
+    if (paused) {
+      oldAlpha = v;
+    } else {
+      force.alpha(v);
+    }
+    return my;
+  }
+  my.start = notPaused(force.start);
+  my.resume = notPaused(force.resume);
 
   return my;
 }

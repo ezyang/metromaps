@@ -17,28 +17,39 @@ function debugForce(force, selection) {
     [ {name: 'Charge',        min: 0, max: 600, step: 1,       f: neg(force.charge)},
       {name: 'Gravity',       min: 0, max: 0.3, step: 0.01,    f: force.gravity},
       {name: 'Friction',      min: 0, max: 1,   step: 0.01,    f: force.friction},
-      {name: 'Link strength', min: 0, max: 1,   step: 0.01,    f: ap2(force.linkStrength), restart: true},
-      {name: 'Link distance', min: 0, max: 80,  step: 1,       f: ap2(force.linkDistance), restart: true},
-      {name: 'Alpha',         min: 0, max: 0.1, step: 0.00001, f: force.alpha,             skip: true},
+      {name: 'Link strength', min: 0, max: 1,   step: 0.01,    f: ap2(force.linkStrength),  restart: true},
+      {name: 'Link distance', min: 0, max: 80,  step: 1,       f: ap2(force.linkDistance),  restart: true},
+      {name: 'Alpha',         min: 0, max: 0.1, step: 0.00001, f: force.alpha,              skip: true},
+      {name: 'Octoforce'    , min: 0, max: 1,   step: 0.001,   f: force.octoforce,          range: true},
     ];
   selection.insert('table').selectAll('tr').data(sliders)
     .enter()
     .insert('tr')
     .call(function (tr) {
       tr.insert('th')
+        .style('text-align', 'right')
+        .style('padding-right', '1em')
         .text(function (d) { return d.name });
       var readout = tr.insert('td')
         .attr('class', 'readout')
         .text(function (d) { return d.f() });
       var widgets = tr.insert('td', '.readout')
         .attr('width', '400')
+        .insert('div')
         .each(function (d) {
-          $(this).slider({min: d.min, max: d.max, step: d.step, value: d.f(), slide: function(e, ui) {
-            d.f(ui.value);
-            readout.text(function (d) {return d.f()});
-            if (d.restart) force.start();
-            else if (!d.skip) force();
-          }});
+          $(this).slider({
+              min: d.min,
+              max: d.max,
+              step: d.step,
+              value: d.f(),
+              values: d.f(), // XXX hack
+              range: d.range,
+              slide: function(e, ui) {
+                d.f(d.range ? ui.values : ui.value);
+                readout.text(function (d) {return d.f()});
+                if (d.restart) force.start();
+                else if (!d.skip) force.resume();
+              }});
         });
       force.on("tick.debug", function(e) {
         readout.text(function (d) {return d.f()});
@@ -56,9 +67,7 @@ function debugForce(force, selection) {
       [ {name: "Restart",     f: function() { pause.property("checked", false); // XXX annoying
                                               force.paused(false);
                                               pause.jq().button("refresh");
-                                              force.resume(); } },
-        {name: "Stop",        f: function() { force.stop(); } },
-        {name: "Tick",        f: function() { force.tick(); } },
+                                              force.start(); } },
         {name: "Clear fixed", f: function() { force.nodes().forEach(function(n) {n.fixed = 0;}) } },
       ]
   div.selectAll(".btn").data(buttons)

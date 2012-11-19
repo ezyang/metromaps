@@ -39,7 +39,7 @@
     </table>
     <div id="debug-container"></div>
     <script>
-
+var metro; // for easy console access
 d3.xml("haitimap2.graphml", function(doc) {
   var nodetable = {}
   var nodes = [];
@@ -95,7 +95,7 @@ d3.xml("haitimap2.graphml", function(doc) {
     .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  var metro = metromap(svg)
+  metro = metromap(svg)
     .size([width, height])
     .nodes(nodes)
     .links(links);
