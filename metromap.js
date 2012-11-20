@@ -1,5 +1,11 @@
 // stateful graph, so it can only be used with one set of nodes/links at
 // a time
+
+var MetroMode = {
+    EDIT: 0, // internal use only (drag behaviors turned on)
+    VIEW: 1, // user viewable (clicks open more information about stations)
+}
+
 function metromap(svg) {
 
   // some defaults
@@ -14,8 +20,9 @@ function metromap(svg) {
   var paused = false;
   var pendingStart = false;
 
-  // XXX if the range here starts at 0.2, we get "snap" motion of
-  // the metro map, but the force layout doesn't do as well.
+  var mode = MetroMode.EDIT;
+
+  // the range of this scale is controlled by 'octoforce'
   var octoscale = d3.scale.linear().domain([0.1,0]).range([0,1]);
 
   function redraw() {
@@ -30,6 +37,14 @@ function metromap(svg) {
       .attr("y1", function(d) { return d.source.y; })
       .attr("x2", function(d) { return d.target.x; })
       .attr("y2", function(d) { return d.target.y; });
+  }
+
+  function onlyEdit(f) {
+    return function() {
+      if (mode == MetroMode.EDIT) {
+        return f.apply(this, arguments);
+      }
+    }
   }
 
   // custom implementation of dragging
@@ -58,19 +73,17 @@ function metromap(svg) {
   // Cribbed from the original drag source.
   var drag = d3.behavior.drag()
         .origin(function(d) {return d})
-        .on("dragstart", function(d) {d.fixed |= 2})
-        .on("drag", dragmove)
-        .on("dragend", function(d) {d.fixed &= 1});
+        .on("dragstart", onlyEdit(function(d) {d.fixed |= 2}))
+        .on("drag", onlyEdit(dragmove))
+        .on("dragend", onlyEdit(function(d) {d.fixed &= 1}));
 
   function mydrag() {
-    this.on("mouseover.force", function(d) {d.fixed |= 4})
-        .on("mouseout.force", function(d) {d.fixed &= 3})
+    this.on("mouseover.force", onlyEdit(function(d) {d.fixed |= 4}))
+        .on("mouseout.force", onlyEdit(function(d) {d.fixed &= 3}))
         .call(drag);
   };
 
   force.on("tick", function(e) {
-    $("#alpha-slider").slider("value", e.alpha);
-    $("#alpha-readout").text(e.alpha);
     // enforce octilinearity (hard constraint)
     var k = octoscale(e.alpha);
     force.links().forEach(function(link) {
@@ -118,6 +131,7 @@ function metromap(svg) {
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; })
       .call(mydrag)
+      .on("click", function() {console.log("click detected")})
       .on("dblclick", function(d) { d.fixed = !d.fixed; redraw(); });
 
     // When there are multiple lines running from a station, we need
@@ -136,6 +150,7 @@ function metromap(svg) {
   var oldAlpha;
   my.paused = function(v) {
     if (!arguments.length) return paused;
+    if (mode != MetroMode.EDIT) return my;
     if (v != paused) {
       if (v) {
         oldAlpha = force.alpha();
@@ -161,7 +176,7 @@ function metromap(svg) {
 
   function notPaused(f) {
     return function() {
-      if (!paused) {
+      if (!paused && mode == MetroMode.EDIT) {
         f();
       } else {
         redraw(); // redraw in case someone dragged a node around
@@ -190,12 +205,20 @@ function metromap(svg) {
     if (paused) {
       oldAlpha = v;
     } else {
-      force.alpha(v);
+      if (mode == MetroMode.EDIT) force.alpha(v);
     }
     return my;
   }
   my.start = notPaused(force.start);
   my.resume = notPaused(force.resume);
+  my.mode = function(v) {
+    if (!arguments.length) return mode;
+    mode = v;
+    if (mode == MetroMode.VIEW) {
+      force.stop();
+    }
+    return my;
+  }
 
   return my;
 }
