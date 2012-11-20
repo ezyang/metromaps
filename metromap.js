@@ -82,8 +82,7 @@ function metromap(svg, container) {
   var onlyEdit = mkOnly(MetroMode.EDIT);
 
   container.on("click", onlyView(function() {
-    if (!bingo) captionPredicate = function() {return false;};
-    else bingo = false;
+    captionPredicate = function() {return false;};
     redraw();
   }));
 
@@ -172,10 +171,14 @@ function metromap(svg, container) {
       .attr("fill", "#FFF")
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; })
+      // XXX problem: drag still interferes with clicks
+      // We really do want to deregister them
       .call(mydrag)
+      // XXX make this hitbox larger
       .on("click", onlyView(function(d) {
+        console.log("foo");
         captionPredicate = function(d2) {return d2 == d}
-        bingo = true;
+        d3.event.stopPropagation();
         redraw();
       }))
       .on("dblclick", onlyEdit(function(d) { d.fixed = !d.fixed; redraw(); }));
