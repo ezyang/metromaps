@@ -6,7 +6,7 @@ var MetroMode = {
     VIEW: 1, // user viewable (clicks open more information about stations)
 }
 
-function metromap(svg) {
+function metromap(svg, container) {
 
   // some defaults
   var force = d3.layout.force()
@@ -16,6 +16,7 @@ function metromap(svg) {
     .linkDistance(40);
 
   var color = d3.scale.category10();
+  var bingo = false;
 
   var paused = false;
   var pendingStart = false;
@@ -25,18 +26,47 @@ function metromap(svg) {
   // the range of this scale is controlled by 'octoforce'
   var octoscale = d3.scale.linear().domain([0.1,0]).range([0,1]);
 
+  var captionPredicate = function() {return false;}
+
   function redraw() {
     // XXX use precomputed selection for efficiency (but remember to
     // update on changes)
-    svg.selectAll("circle")
+    svg.selectAll(".circle")
       .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; });
-    svg.selectAll("line")
+    svg.selectAll(".line")
       .attr("x1", function(d) { return d.source.x; })
       .attr("y1", function(d) { return d.source.y; })
       .attr("x2", function(d) { return d.target.x; })
       .attr("y2", function(d) { return d.target.y; });
+
+    // these go "on top" of nodes and don't need to be accounted for in
+    // layout
+    var capWidth = 240;
+    var capHeight = 100;
+    var caption = svg.selectAll(".caption").data(force.nodes().filter(captionPredicate), function(n) {return n.id});
+    // XXX TODO nice triangle for the things
+    caption
+      .enter()
+      .append("g")
+      .attr("class", "caption")
+      .insert("foreignObject")
+      .attr("width", capWidth)
+      // XXX this does poorly if we wrap around to a third line...
+      // maybe with the triangle we can just adjust it automatically
+      .attr("height", capHeight)
+      .attr("x", -capWidth/2)
+      .attr("y", -capHeight/2-5)
+      .insert("xhtml:div")
+      .style("background", "#FFF")
+      .style("border", "1px solid #000")
+      .style("border-radius", "4px")
+      .style("padding", "5px")
+      .text(function(d) {return d.label});
+    caption
+      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")" });
+    caption.exit().remove();
   }
 
   function mkOnly(sym) {
@@ -50,6 +80,12 @@ function metromap(svg) {
   }
   var onlyView = mkOnly(MetroMode.VIEW);
   var onlyEdit = mkOnly(MetroMode.EDIT);
+
+  container.on("click", onlyView(function() {
+    if (!bingo) captionPredicate = function() {return false;};
+    else bingo = false;
+    redraw();
+  }));
 
   // custom implementation of dragging
   function dragmove(d) {
@@ -74,7 +110,8 @@ function metromap(svg) {
     }
     maybeResume();
   }
-  // Cribbed from the original drag source.
+  // Cribbed from the original drag source, but with onlyEdit sprayed
+  // on all of the handlers
   var drag = d3.behavior.drag()
         .origin(function(d) {return d})
         .on("dragstart", onlyEdit(function(d) {d.fixed |= 2}))
@@ -124,10 +161,11 @@ function metromap(svg) {
   });
 
   function my() {
-    svg.selectAll("circle")
+    svg.selectAll(".circle")
       .data(force.nodes())
       .enter()
       .append("circle")
+      .attr("class", "circle")
       .attr("r", 8)
       .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
       .attr("stroke-width", 3)
@@ -135,16 +173,21 @@ function metromap(svg) {
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; })
       .call(mydrag)
-      .on("click", onlyView(function() {console.log("click detected")}))
+      .on("click", onlyView(function(d) {
+        captionPredicate = function(d2) {return d2 == d}
+        bingo = true;
+        redraw();
+      }))
       .on("dblclick", onlyEdit(function(d) { d.fixed = !d.fixed; redraw(); }));
 
     // When there are multiple lines running from a station, we need
     // to offset them from the center 
 
-    svg.selectAll("line")
+    svg.selectAll(".line")
       .data(force.links())
       .enter()
-      .insert("line", "circle")
+      .insert("line", ".circle")
+      .attr("class", "line")
       .style("stroke", function(d) {return d.path.length == 1 ? color(d.path[0]) : "#000"})
       .style("stroke-width", 7);
 

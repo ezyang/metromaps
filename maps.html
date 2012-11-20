@@ -58,8 +58,12 @@ d3.xml("haitimap2.graphml", function(doc) {
     var id = e.attr("id");
     var sx = parseInt(e.select("data[key='x']").text()),
         sy = parseInt(e.select("data[key='y']").text());
+    var rawtitle = e.select("data[key='label']").text().trim();
+    // XXX price would have told me to use a regex
+    var bits = rawtitle.split("\t");
     var node = {
-      label: e.select("data[key='label']").text().trim(),
+      id: id,
+      label: bits[0].trim(),
       //date: format.parse(e.select("data[key='date']").text().trim()),
       sx: sx,
       sy: sy,
@@ -94,7 +98,7 @@ d3.xml("haitimap2.graphml", function(doc) {
     .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  metro = metromap(svg)
+  metro = metromap(svg, d3.select("#svg-container"))
     .size([width, height])
     .nodes(nodes)
     .links(links);
