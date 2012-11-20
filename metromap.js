@@ -39,13 +39,17 @@ function metromap(svg) {
       .attr("y2", function(d) { return d.target.y; });
   }
 
-  function onlyEdit(f) {
-    return function() {
-      if (mode == MetroMode.EDIT) {
-        return f.apply(this, arguments);
+  function mkOnly(sym) {
+    return function(f) {
+      return function() {
+        if (mode == sym) {
+          return f.apply(this, arguments);
+        }
       }
     }
   }
+  var onlyView = mkOnly(MetroMode.VIEW);
+  var onlyEdit = mkOnly(MetroMode.EDIT);
 
   // custom implementation of dragging
   function dragmove(d) {
@@ -131,8 +135,8 @@ function metromap(svg) {
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; })
       .call(mydrag)
-      .on("click", function() {console.log("click detected")})
-      .on("dblclick", function(d) { d.fixed = !d.fixed; redraw(); });
+      .on("click", onlyView(function() {console.log("click detected")}))
+      .on("dblclick", onlyEdit(function(d) { d.fixed = !d.fixed; redraw(); }));
 
     // When there are multiple lines running from a station, we need
     // to offset them from the center 
