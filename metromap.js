@@ -269,6 +269,12 @@ function metromap(svg, container) {
     }
     return my;
   }
+  my.captionPredicate = function(v) {
+    if (!arguments.length) return captionPredicate;
+    captionPredicate = v;
+    redraw();
+    return my;
+  }
 
   return my;
 }

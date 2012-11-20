@@ -1,12 +1,12 @@
 // for generating a slideshow panel
 // XXX is gonna need to know about the force layout
 
-function slideshow() {
+function slideshow(metro) {
   var current = 0;
   var steps = [
     {id: 0, title: "Non-linear narrative", text: "People think of time as a linear progression, but actually, it's more like a wibbly wobbly ball of timey wimey stuff."},
-    {id: 1, title: "Step 1", text: "First step."},
-    {id: 2, title: "Step 2", text: "Second step."},
+    {id: 1, title: "Step 1", text: "First step.", show: function(x) {return x.id == "n10475"} },
+    {id: 2, title: "Step 2", text: "Second step.", show: function(x) {return x.id == "n10488"} },
   ];
   var id = fresh("slideshow");
   // CLASSES: page, next, text
@@ -74,6 +74,8 @@ function slideshow() {
           });
         n.exit().remove();
       });
+
+    metro.captionPredicate(steps[current].show || function() {return false;});
   }
   my.current = function(v) {
     if (!arguments.length) return current;
