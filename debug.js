@@ -31,7 +31,7 @@ function debugForce(force, selection) {
   btns.jq().buttonset();
 
   function getAlphaSlider() {
-    return selection.selectAll('.slider').filter(function (d) {return d.f == force.alpha});
+    return selection.selectAll('.slider').filter(function (d) {return d.alpha});
   }
 
   var modes = div.insert("span").text(" ");
@@ -50,7 +50,7 @@ function debugForce(force, selection) {
             if (d.mode != MetroMode.EDIT) {
               getAlphaSlider().jq().slider("value", 0).slider("disable");
             } else {
-              getAlphaSlider().jq().slider("value", force.alpha()).slider("enable");
+              getAlphaSlider().jq().slider("value", round(force.alpha)()).slider("enable");
             }
           })
         span.insert("label")
@@ -73,13 +73,20 @@ function debugForce(force, selection) {
       return f(v);
     }
   }
+
+  function round(f) {
+    return function(v) {
+      if (!arguments.length) return d3.format(".6f")(f());
+      return f(v);
+    }
+  }
   var sliders =
     [ {name: 'Charge',        min: 0, max: 600, step: 1,       f: neg(force.charge)},
       {name: 'Gravity',       min: 0, max: 0.3, step: 0.01,    f: force.gravity},
       {name: 'Friction',      min: 0, max: 1,   step: 0.01,    f: force.friction},
       {name: 'Link strength', min: 0, max: 1,   step: 0.01,    f: ap2(force.linkStrength),  restart: true},
       {name: 'Link distance', min: 0, max: 80,  step: 1,       f: ap2(force.linkDistance),  restart: true},
-      {name: 'Alpha',         min: 0, max: 0.1, step: 0.00001, f: force.alpha,              skip: true},
+      {name: 'Alpha',         min: 0, max: 0.1, step: 0.00001, f: round(force.alpha),       skip: true, alpha: true},
       {name: 'Octoforce'    , min: 0, max: 1,   step: 0.001,   f: force.octoforce,          range: true},
     ];
   selection.insert('table').selectAll('tr').data(sliders)
@@ -114,7 +121,7 @@ function debugForce(force, selection) {
         });
       force.on("tick.debug", function(e) {
         readout.text(function (d) {return d.f()});
-        widgets.filter(function (d) {return d.f == force.alpha}).each(function () {$(this).slider("value", e.alpha)});
+        getAlphaSlider().jq().slider("value", e.alpha);
       });
     });
 }
