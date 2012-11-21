@@ -73,6 +73,7 @@ function metromap(container) {
     .linkDistance(40);
 
   var color             = d3.scale.category10(),
+      dur               = 500,
       paused            = false,
       pendingStart      = false, // if start() is called while paused or in view mode
       mode              = MetroMode.EDIT,
@@ -140,6 +141,11 @@ function metromap(container) {
   }
   var onlyView = mkOnly(MetroMode.VIEW);
   var onlyEdit = mkOnly(MetroMode.EDIT);
+  function viewEdit(view, edit) {
+    return function() {
+      return (mode == MetroMode.VIEW ? view : edit).apply(this, arguments);
+    }
+  }
 
   svg.on("click", onlyView(function() {
     captionPredicate = function() {return false;};
@@ -227,9 +233,10 @@ function metromap(container) {
   });
 
   function my() {
-    var circle = svg.selectAll(".circle")
-      .data(force.nodes())
-      .enter()
+    var cdata = svg.selectAll(".circle")
+      .data(force.nodes());
+    cdata.exit().remove();
+    var circle = cdata.enter()
       .insert("circle", ".dummySelector")
       .attr("class", "circle")
       .attr("cx", function(d) { return d.x; })
@@ -238,10 +245,23 @@ function metromap(container) {
       // We really do want to deregister them [DRAGUNREGISTER]
       .call(mydrag)
       // XXX make this hitbox larger
-      .on("click", onlyView(function(d) {
+      .on("click", viewEdit(function(d) {
         captionPredicate = function(d2) {return d2 == d}
         d3.event.stopPropagation();
         redraw();
+      }, function(d) {
+        // Not allowed to delete non-dummies
+        if (d3.event.shiftKey && d.dummy) {
+          // do-se-do
+          var n = d.dummyLinks[0].target;
+          d.dummyLinks[0].target = d.dummyLinks[1].target;
+          // not necessary, since it will just get deleted
+          //d.dummyLinks[1].source = d.dummyLinks[0].source;
+          // Warning: O(n) deletion
+          force.links().splice(force.links().indexOf(d.dummyLinks[1]), 1);
+          force.nodes().splice(force.nodes().indexOf(n), 1);
+          my();
+        }
       }))
       .on("dblclick", onlyEdit(function(d) { d.fixed = !d.fixed; redraw(); }));
 
@@ -266,9 +286,10 @@ function metromap(container) {
         .attr("cx", coords[0])
         .attr("cy", coords[1]);
     }
-    svg.selectAll(".line")
-      .data(force.links())
-      .enter()
+    var ldata = svg.selectAll(".line")
+      .data(force.links());
+    ldata.exit().remove();
+    ldata.enter()
       .insert("line", ".circle")
       .attr("class", "line")
       .style("stroke", function(d) {return d.path.length == 1 ? color(d.path[0]) : "#000"})
@@ -276,15 +297,29 @@ function metromap(container) {
       .on("mouseover", moveSelector)
       .on("mousemove", moveSelector)
       .on("mouseout", function() {dummySelector.style("display", "none")})
+      // XXX bleh names: s/d/l/ or something
       .on("click", function(d) {
         // alright, time to dick around with some node insertion
         var coords = d3.mouse(svg.node());
         var n = {x: coords[0], y: coords[1], dummy: true}
+        // XXX length of the resulting links should be adjusted
         var l = {source: n, target: d.target, path: d.path}
+        // [DUMMYRENDER]
+        // XXX arguably, the way these should be rendered is as a polyline,
+        // because we don't want to draw the circle for presentation.
+        // (Maybe it should be a polyline for everything!)
+        // XXX alternatively, for lines which are single colored, we can
+        // draw an appropriately colored circle.  This doesn't work well
+        // when multiple paths are involved (though to be fair, we
+        // haven't figured out how to draw those yet)
+        // XXX two conjoined lines that split up require you to be able
+        // to join two dummy nodes together which share a common
+        // source/target, e.g.
         force.nodes().push(n);
         force.links().push(l);
         d.target = n;
-        console.log(d);
+        // [0].target and [1].source are n by convention
+        n.dummyLinks = [d, l]
         my(); // needs to update force layout yo
       });
 
@@ -368,8 +403,14 @@ function metromap(container) {
   my.mode = function(v) {
     if (!arguments.length) return mode;
     mode = v;
+    var dummyNodeTransition = svg.selectAll(".circle").filter(function(d) {return d.dummy}).transition().duration(dur);
     if (mode == MetroMode.VIEW) {
+      // XXX You can see that there are slight gaps from doing this.
+      // See [DUMMYRENDER] for more information.
+      dummyNodeTransition.style("opacity", 0);
       force.stop();
+    } else {
+      dummyNodeTransition.style("opacity", 1);
     }
     return my;
   }
