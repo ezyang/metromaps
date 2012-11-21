@@ -146,6 +146,13 @@ function metromap(container) {
     redraw();
   }));
 
+  var dummySelector = svg.insert("circle")
+    .attr("class", "dummySelector")
+    .attr("r", 4)
+    .attr("fill", "#000")
+    .attr("pointer-events", "none")
+    .style("display", "none");
+
   // custom implementation of dragging
   function dragmove(d) {
     var dx = d3.event.x - d.px;
@@ -220,15 +227,11 @@ function metromap(container) {
   });
 
   function my() {
-    svg.selectAll(".circle")
+    var circle = svg.selectAll(".circle")
       .data(force.nodes())
       .enter()
-      .append("circle")
+      .insert("circle", ".dummySelector")
       .attr("class", "circle")
-      .attr("r", 8)
-      .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
-      .attr("stroke-width", 3)
-      .attr("fill", "#FFF")
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; })
       // XXX problem: drag still interferes with clicks
@@ -242,17 +245,48 @@ function metromap(container) {
       }))
       .on("dblclick", onlyEdit(function(d) { d.fixed = !d.fixed; redraw(); }));
 
+    circle.filter(function(d) {return !d.dummy})
+      .attr("r", 8)
+      .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
+      .attr("stroke-width", 3)
+      .attr("fill", "#FFF");
+
+    circle.filter(function(d) {return d.dummy})
+      .attr("r", 4)
+      .attr("fill", function (d) { return d.fixed & 1 ? "#EEE" : "#000" });
+
     // When there are multiple lines running from a station, we need
     // to offset them from the center. But actually, this is pretty
     // complicated.
 
+    function moveSelector(d) {
+      var coords = d3.mouse(svg.node());
+      // XXX todo snap to coordinates of true line
+      dummySelector.style("display", "inherit")
+        .attr("cx", coords[0])
+        .attr("cy", coords[1]);
+    }
     svg.selectAll(".line")
       .data(force.links())
       .enter()
       .insert("line", ".circle")
       .attr("class", "line")
       .style("stroke", function(d) {return d.path.length == 1 ? color(d.path[0]) : "#000"})
-      .style("stroke-width", 7);
+      .style("stroke-width", 7)
+      .on("mouseover", moveSelector)
+      .on("mousemove", moveSelector)
+      .on("mouseout", function() {dummySelector.style("display", "none")})
+      .on("click", function(d) {
+        // alright, time to dick around with some node insertion
+        var coords = d3.mouse(svg.node());
+        var n = {x: coords[0], y: coords[1], dummy: true}
+        var l = {source: n, target: d.target, path: d.path}
+        force.nodes().push(n);
+        force.links().push(l);
+        d.target = n;
+        console.log(d);
+        my(); // needs to update force layout yo
+      });
 
     force.start(); // will call redraw
   }
