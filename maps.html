@@ -90,17 +90,9 @@ d3.xml("haitimap2.graphml", function(doc) {
       path: p,
     })
   });
-  var margin = {top: 30, right: 200, bottom: 40, left: 50},
-      width = 600 - margin.right - margin.left,
-      height = 400 - margin.top - margin.bottom;
-  svg = d3.select("#svg-container").append("svg")
-      .attr("width", width + margin.right + margin.left)
-      .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  metro = metromap(svg, d3.select("#svg-container"))
-    .size([width, height])
+  metro = metromap(d3.select("#svg-container"))
+    .size([600, 400])
     .nodes(nodes)
     .links(links);
   //console.log(metro.nodes());

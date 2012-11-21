@@ -1,12 +1,71 @@
-// stateful graph, so it can only be used with one set of nodes/links at
-// a time
-
+/**
+ * For development purposes, metro maps are modal.  For
+ * normal use, VIEW is the mode
+ */
 var MetroMode = {
     EDIT: 0, // internal use only (drag behaviors turned on)
     VIEW: 1, // user viewable (clicks open more information about stations)
 }
 
-function metromap(svg, container) {
+/**
+ * This function inserts an SVG element into 'container', and then returns
+ * a closure can be invoked to begin rendering the metro map.  Many of
+ * the accessors on the closure are the same as force directed layout,
+ * here are some of the new ones:
+ *
+ * captionPredicate
+ *    a function which takes a node data element and returns true if the
+ *    caption should be shown for this node, and false otherwise.
+ *
+ *        metro.captionPredicate(function(d) {return d.id == 'n12345'})
+ *
+ * mode
+ *    the mode of the visualization, either MetroMode.VIEW (for end-user
+ *    viewing) or MetroMode.EDIT (for development work).  In VIEW mode,
+ *    no updates are made to the force layout, and extra interactivity
+ *    is enabled.
+ *
+ *        metro.mode(MetroMode.VIEW)
+ *
+ * octoforce
+ *    The range [0,1] for a linear scale on how strong octilinear forces
+ *    are.  Try playing aroudn with the "Octo Force" sliders in the
+ *    debug panel to see how these interact with the layout:
+ *    essentially, a range near zero will result in no octilinearity,
+ *    and a range near one will result in very strict enforcement
+ *    of octilinearity.
+ *
+ *        metro.octoforce([0,1])
+ *
+ * paused
+ *    Pauses the visualization.  When the visualization is paused, all
+ *    calls to things that would resume graph layout are silently
+ *    intercepted and buffered for when the visualization is unpaused.
+ *
+ * These accessors directly correspond to their force layout
+ * counterparts (though their behavior may be slightly modified):
+ *
+ *    nodes
+ *    links
+ *    charge
+ *    gravity
+ *    friction
+ *    linkStrength
+ *    linkDistance
+ *    size
+ *    on
+ *    stop
+ *    tick
+ *    alpha
+ *    start
+ *    resume
+ *
+ * TODO: factor out the pause functionality into its own class, it's
+ * pretty useful for debugging force layouts in general!
+ */
+function metromap(container) {
+
+  var svg = container.append("svg");
 
   // some defaults
   var force = d3.layout.force()
@@ -16,7 +75,6 @@ function metromap(svg, container) {
     .linkDistance(40);
 
   var color = d3.scale.category10();
-  var bingo = false;
 
   var paused = false;
   var pendingStart = false;
@@ -81,7 +139,7 @@ function metromap(svg, container) {
   var onlyView = mkOnly(MetroMode.VIEW);
   var onlyEdit = mkOnly(MetroMode.EDIT);
 
-  container.on("click", onlyView(function() {
+  svg.on("click", onlyView(function() {
     captionPredicate = function() {return false;};
     redraw();
   }));
@@ -176,7 +234,6 @@ function metromap(svg, container) {
       .call(mydrag)
       // XXX make this hitbox larger
       .on("click", onlyView(function(d) {
-        console.log("foo");
         captionPredicate = function(d2) {return d2 == d}
         d3.event.stopPropagation();
         redraw();
@@ -246,7 +303,13 @@ function metromap(svg, container) {
   my.friction = rm(force.friction);
   my.linkStrength = rm(force.linkStrength);
   my.linkDistance = rm(force.linkDistance);
-  my.size = rm(force.size);
+  my.size = function(v) {
+    if (!arguments.length) return force.size();
+    svg.attr("width", v[0]);
+    svg.attr("height", v[1]);
+    force.size(v);
+    return my;
+  }
   my.on = rm(force.on);
   my.stop = rm(force.stop);
   my.tick = rm(force.tick);
