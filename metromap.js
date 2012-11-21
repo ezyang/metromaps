@@ -29,7 +29,7 @@ var MetroMode = {
  *
  * octoforce
  *    The range [0,1] for a linear scale on how strong octilinear forces
- *    are.  Try playing aroudn with the "Octo Force" sliders in the
+ *    are.  Try playing around with the "Octo Force" sliders in the
  *    debug panel to see how these interact with the layout:
  *    essentially, a range near zero will result in no octilinearity,
  *    and a range near one will result in very strict enforcement
@@ -66,25 +66,20 @@ var MetroMode = {
 function metromap(container) {
 
   var svg = container.append("svg");
-
-  // some defaults
-  var force = d3.layout.force()
+  var force = d3.layout.force() // some defaults
     .charge(-100)
     .gravity(0.1)
     .linkStrength(1)
     .linkDistance(40);
 
-  var color = d3.scale.category10();
-
-  var paused = false;
-  var pendingStart = false;
-
-  var mode = MetroMode.EDIT;
+  var color             = d3.scale.category10(),
+      paused            = false,
+      pendingStart      = false, // if start() is called while paused or in view mode
+      mode              = MetroMode.EDIT,
+      captionPredicate  = function() {return false;};
 
   // the range of this scale is controlled by 'octoforce'
   var octoscale = d3.scale.linear().domain([0.1,0]).range([0,1]);
-
-  var captionPredicate = function() {return false;}
 
   function redraw() {
     // XXX use precomputed selection for efficiency (but remember to
@@ -99,8 +94,12 @@ function metromap(container) {
       .attr("x2", function(d) { return d.target.x; })
       .attr("y2", function(d) { return d.target.y; });
 
-    // these go "on top" of nodes and don't need to be accounted for in
+    // XXX putting this here is pretty expensive, since we need to
+    // compute the filter every tick (though fortunately we don't
+    // have many nodes)
+    // NOTE these go "on top" of nodes and don't need to be accounted for in
     // layout
+    // XXX caption width/height should be configurable
     var capWidth = 240;
     var capHeight = 100;
     var caption = svg.selectAll(".caption").data(force.nodes().filter(captionPredicate), function(n) {return n.id});
@@ -127,10 +126,13 @@ function metromap(container) {
     caption.exit().remove();
   }
 
-  function mkOnly(sym) {
+  // XXX the entire regime here is a little misguided, see also
+  // [DRAGUNREGISTER]
+  // returns version of function which does nothing if mode != reqmode
+  function mkOnly(reqmode) {
     return function(f) {
       return function() {
-        if (mode == sym) {
+        if (mode == reqmode) {
           return f.apply(this, arguments);
         }
       }
@@ -230,7 +232,7 @@ function metromap(container) {
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; })
       // XXX problem: drag still interferes with clicks
-      // We really do want to deregister them
+      // We really do want to deregister them [DRAGUNREGISTER]
       .call(mydrag)
       // XXX make this hitbox larger
       .on("click", onlyView(function(d) {
@@ -241,7 +243,8 @@ function metromap(container) {
       .on("dblclick", onlyEdit(function(d) { d.fixed = !d.fixed; redraw(); }));
 
     // When there are multiple lines running from a station, we need
-    // to offset them from the center 
+    // to offset them from the center. But actually, this is pretty
+    // complicated.
 
     svg.selectAll(".line")
       .data(force.links())
@@ -251,7 +254,7 @@ function metromap(container) {
       .style("stroke", function(d) {return d.path.length == 1 ? color(d.path[0]) : "#000"})
       .style("stroke-width", 7);
 
-    force.start();
+    force.start(); // will call redraw
   }
 
   var oldAlpha;
@@ -274,6 +277,8 @@ function metromap(container) {
     return my;
   }
 
+  // apply the accessor function, but in the case of
+  // chaining return our closure, not the original
   function rm(f) {
     return function() {
       var r = f.apply(this, arguments);
@@ -281,6 +286,8 @@ function metromap(container) {
     }
   }
 
+  // only call the function if we're not paused and we're
+  // in edit mode
   function notPaused(f) {
     return function() {
       if (!paused && mode == MetroMode.EDIT) {
