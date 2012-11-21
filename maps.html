@@ -18,15 +18,17 @@
       #controls {vertical-align:top; width:17em;}
       svg {border-left: 1px solid #CCC;}
       #debug-container {margin:0 1em;}
-      td {padding: 0 1em;}
-      .ui-button {font-size:0.8em; }
+      #controls td {padding: 0 0.5em 0 0;}
+      #debug-container td {padding: 0 0.5em;}
+      .ui-button {font-size:0.7em; }
+      #controls .ui-button span {padding:.2em .5em}
       /* See jQuery UI bug http://bugs.jqueryui.com/ticket/8827 */
       .ui-buttonset .ui-button {margin:0; margin-right:-1px;}
       .ui-state-hover, .ui-state-active {z-index:1;}
     </style>
   </head>
   <body>
-    <h1>Metro Maps of the News</h1>
+    <!--<h1>Metro Maps of the News</h1>-->
     <table>
       <tr>
         <td id="controls">
@@ -92,7 +94,7 @@ d3.xml("haitimap2.graphml", function(doc) {
   });
 
   metro = metromap(d3.select("#svg-container"))
-    .size([600, 400])
+    .size([500, 400])
     .nodes(nodes)
     .links(links);
   //console.log(metro.nodes());
