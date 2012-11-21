@@ -60,6 +60,33 @@ var MetroMode = {
  *    start
  *    resume
  *
+ * Nodes and links require some metadata; maps.html is the canonical
+ * source but here is some documentation on what it means:
+ *
+ * node :: {
+ *    id: Unique string identifier for this node, used for making
+ *        references from captions
+ *    label: String article title
+ *    date: Date object of when article was published (XXX not
+ *      implemented at the moment)
+ *    sx, sy: Advisory x and y coordinates, not used for anything ATM
+ *    fixed: Bitmap indicating if the node is fixed w.r.t. force layout
+ *    dummy: Whether or not this is a "dummy node".  Dummy nodes do not
+ *      have id, label or date fields; they don't represent stories,
+ *      just "kinks" in an edge.  They are guaranteed to have exactly
+ *      two connecting edges.
+ *    dummyLinks: Only set when a node is a dummy, it points to the
+ *      unique two connecting edges, such that
+ *         dummyLinks[0].target == dummyLinks[1].source
+ * }
+ *
+ * link :: {
+ *    source, target: Node objects the link is connected to.  At the
+ *      moment, the directionality doesn't mean anything.
+ *    path: List of path keys, which identify what paths are flowing
+ *      from these nodes
+ * }
+ *
  * TODO: factor out the pause functionality into its own class, it's
  * pretty useful for debugging force layouts in general!
  */
@@ -319,6 +346,7 @@ function metromap(container) {
         force.links().push(l);
         d.target = n;
         // [0].target and [1].source are n by convention
+        // XXX add an assert here
         n.dummyLinks = [d, l]
         my(); // needs to update force layout yo
       });
