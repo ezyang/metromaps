@@ -41,6 +41,7 @@ var MetroMode = {
  *    Pauses the visualization.  When the visualization is paused, all
  *    calls to things that would resume graph layout are silently
  *    intercepted and buffered for when the visualization is unpaused.
+ *    (Implemented by pforce.js)
  *
  * These accessors directly correspond to their force layout
  * counterparts (though their behavior may be slightly modified):
@@ -87,8 +88,6 @@ var MetroMode = {
  *      from these nodes
  * }
  *
- * TODO: factor out the pause functionality into its own class, it's
- * pretty useful for debugging force layouts in general!
  */
 function metromap(container) {
 
@@ -98,11 +97,10 @@ function metromap(container) {
     .gravity(0.1)
     .linkStrength(1)
     .linkDistance(40);
+  d3_layout_force_pausable(force);
 
   var color             = d3.scale.category10(),
       dur               = 500,
-      paused            = false,
-      pendingStart      = false, // if start() is called while paused or in view mode
       mode              = MetroMode.EDIT,
       captionPredicate  = function() {return false;};
 
@@ -207,7 +205,8 @@ function metromap(container) {
       d.x = d.px;
       d.y = d.py;
     }
-    maybeResume();
+    redraw();
+    force.resume();
   }
   // Cribbed from the original drag source, but with onlyEdit sprayed
   // on all of the handlers
@@ -354,26 +353,6 @@ function metromap(container) {
     force.start(); // will call redraw
   }
 
-  var oldAlpha;
-  my.paused = function(v) {
-    if (!arguments.length) return paused;
-    if (mode != MetroMode.EDIT) return my;
-    if (v != paused) {
-      if (v) {
-        oldAlpha = force.alpha();
-        force.stop();
-      } else {
-        if (pendingStart) {
-          force.start();
-          pendingStart = false;
-        }
-        force.alpha(oldAlpha);
-      }
-    }
-    paused = v;
-    return my;
-  }
-
   // apply the accessor function, but in the case of
   // chaining return our closure, not the original
   function rm(f) {
@@ -382,22 +361,6 @@ function metromap(container) {
       return arguments.length ? my : r;
     }
   }
-
-  // only call the function if we're not paused and we're
-  // in edit mode
-  function notPaused(f) {
-    return function() {
-      if (!paused && mode == MetroMode.EDIT) {
-        f();
-      } else {
-        redraw(); // redraw in case someone dragged a node around
-        if (f == force.start) pendingStart = true;
-      }
-      return my;
-    }
-  }
-
-  var maybeResume = notPaused(force.resume);
 
   my.octoforce = rm(octoscale.range);
   my.nodes = rm(force.nodes);
@@ -417,17 +380,10 @@ function metromap(container) {
   my.on = rm(force.on);
   my.stop = rm(force.stop);
   my.tick = rm(force.tick);
-  my.alpha = function(v) {
-    if (!arguments.length) return paused ? oldAlpha : force.alpha();
-    if (paused) {
-      oldAlpha = v;
-    } else {
-      if (mode == MetroMode.EDIT) force.alpha(v);
-    }
-    return my;
-  }
-  my.start = notPaused(force.start);
-  my.resume = notPaused(force.resume);
+  my.alpha = rm(force.alpha);
+  my.start = rm(force.start);
+  my.resume = rm(force.resume);
+  my.paused = rm(force.paused);
   my.mode = function(v) {
     if (!arguments.length) return mode;
     mode = v;

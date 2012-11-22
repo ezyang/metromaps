@@ -110,7 +110,7 @@ function debugForce(force, selection) {
               max: d.max,
               step: d.step,
               value: d.f(),
-              values: d.f(), // XXX hack
+              values: d.range ? d.f() : undefined, // XXX hack
               range: d.range,
               slide: function(e, ui) {
                 d.f(d.range ? ui.values : ui.value);
