@@ -102,6 +102,7 @@ function metromap(container) {
   var color             = d3.scale.category10(),
       dur               = 500,
       mode              = MetroMode.EDIT,
+      lines             = [],
       captionPredicate  = function() {return false;};
 
   // the range of this scale is controlled by 'octoforce'
@@ -119,6 +120,9 @@ function metromap(container) {
       .attr("y1", function(d) { return d.source.y; })
       .attr("x2", function(d) { return d.target.x; })
       .attr("y2", function(d) { return d.target.y; });
+    var line = d3.svg.line().x(function(d) {return d.x}).y(function(d) {return d.y});
+    svg.selectAll(".metroline")
+      .attr("d", function(l) { return line(l.nodes); });
 
     // XXX putting this here is pretty expensive, since we need to
     // compute the filter every tick (though fortunately we don't
@@ -182,7 +186,7 @@ function metromap(container) {
     .attr("r", 4)
     .attr("fill", "#000")
     .attr("pointer-events", "none")
-    .style("display", "none");
+    .style("visibility", "hidden");
 
   // custom implementation of dragging
   function dragmove(d) {
@@ -301,14 +305,10 @@ function metromap(container) {
       .attr("r", 4)
       .attr("fill", function (d) { return d.fixed & 1 ? "#EEE" : "#000" });
 
-    // When there are multiple lines running from a station, we need
-    // to offset them from the center. But actually, this is pretty
-    // complicated.
-
     function moveSelector(d) {
       var coords = d3.mouse(svg.node());
       // XXX todo snap to coordinates of true line
-      dummySelector.style("display", "inherit")
+      dummySelector.style("visibility", "visible")
         .attr("cx", coords[0])
         .attr("cy", coords[1]);
     }
@@ -318,11 +318,14 @@ function metromap(container) {
     ldata.enter()
       .insert("line", ".circle")
       .attr("class", "line")
-      .style("stroke", function(d) {return d.path.length == 1 ? color(d.path[0]) : "#000"})
-      .style("stroke-width", 7)
+      .style("opacity", 0.5)
+      .style("stroke", "#000")
+      .style("visibility", "hidden")
+      .style("pointer-events", "all")
+      .style("stroke-width", 9)
       .on("mouseover", moveSelector)
       .on("mousemove", moveSelector)
-      .on("mouseout", function() {dummySelector.style("display", "none")})
+      .on("mouseout", function() {dummySelector.style("visibility", "hidden")})
       // XXX bleh names: s/d/l/ or something
       .on("click", function(d) {
         // alright, time to dick around with some node insertion
@@ -330,14 +333,6 @@ function metromap(container) {
         var n = {x: coords[0], y: coords[1], dummy: true}
         // XXX length of the resulting links should be adjusted
         var l = {source: n, target: d.target, path: d.path}
-        // [DUMMYRENDER]
-        // XXX arguably, the way these should be rendered is as a polyline,
-        // because we don't want to draw the circle for presentation.
-        // (Maybe it should be a polyline for everything!)
-        // XXX alternatively, for lines which are single colored, we can
-        // draw an appropriately colored circle.  This doesn't work well
-        // when multiple paths are involved (though to be fair, we
-        // haven't figured out how to draw those yet)
         // XXX two conjoined lines that split up require you to be able
         // to join two dummy nodes together which share a common
         // source/target, e.g.
@@ -347,8 +342,32 @@ function metromap(container) {
         // [0].target and [1].source are n by convention
         // XXX add an assert here
         n.dummyLinks = [d, l]
+        // need to update affected lines too
+        d.path.forEach(function(line) {
+          var i = line.nodes.indexOf(d.source);
+          if (line.nodes[i+1] == l.target) {
+            line.nodes.splice(i+1, 0, n);
+          } else {
+            // assert line.nodes[i-1] == n.target
+            line.nodes.splice(i, 0, n);
+          }
+        });
         my(); // needs to update force layout yo
       });
+
+    // When there are multiple lines running from a station, we need
+    // to offset them from the center. But actually, this is pretty
+    // complicated.
+
+    svg.selectAll(".metroline")
+      .data(lines)
+      .enter()
+      .insert("path", ".line")
+      .attr("class", "metroline")
+      .style("stroke", function(l) {return color(l.id)})
+      .style("stroke-width", 7)
+      // pick some nice stroke rounding algo
+      .style("fill", "none");
 
     force.start(); // will call redraw
   }
@@ -365,6 +384,11 @@ function metromap(container) {
   my.octoforce = rm(octoscale.range);
   my.nodes = rm(force.nodes);
   my.links = rm(force.links);
+  my.lines = function(v) {
+    if (!arguments.length) return lines;
+    lines = v;
+    return my;
+  }
   my.charge = rm(force.charge);
   my.gravity = rm(force.gravity);
   my.friction = rm(force.friction);
@@ -390,8 +414,6 @@ function metromap(container) {
     mode = v;
     var dummyNodeTransition = svg.selectAll(".circle").filter(function(d) {return d.dummy}).transition().duration(dur);
     if (mode == MetroMode.VIEW) {
-      // XXX You can see that there are slight gaps from doing this.
-      // See [DUMMYRENDER] for more information.
       dummyNodeTransition.style("opacity", 0);
       oldPaused = my.paused();
       my.paused(true);

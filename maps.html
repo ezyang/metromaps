@@ -45,7 +45,7 @@
     <script>
 var metro; // for easy console access
 d3.xml("haitimap2.graphml", function(doc) {
-  var nodetable = {}
+  var nodetable = d3.map();
   var nodes = [];
   var links = [];
   var format = d3.time.format("%d/%m/%Y");
@@ -76,28 +76,69 @@ d3.xml("haitimap2.graphml", function(doc) {
       //x: sx/100,
       //y: sy+200,
       fixed: 0,
+      edges: d3.map(), // indexed by line
     };
-    nodetable[id] = node;
+    nodetable.set(id, node);
     nodes.push(node);
   });
+  var lines = [];
+  var linetable = d3.map();
+  d3.select(doc).selectAll("key")
+    .filter(function() {return d3.select(this).attr("for") == "edge"})
+    .each(function() {
+      var id = d3.select(this).attr("id");
+      var line = { id: id, nodes: [] };
+      linetable.set(id, line);
+      lines.push(line);
+    });
   d3.select(doc).selectAll("edge").each(function () {
     var e = d3.select(this);
-    var n1 = e.attr("source");
-    var n2 = e.attr("target");
-    var p = [];
+    var n1 = nodetable.get(e.attr("source"));
+    var n2 = nodetable.get(e.attr("target"));
+    var l = {
+      source: n1,
+      target: n2,
+      path: [],
+    };
     e.selectAll("data").each(function() {
       // XXX assuming that none of these are FALSE
-      p.push(d3.select(this).attr("key"))
+      var p = d3.select(this).attr("key");
+      l.path.push(linetable.get(p));
+      if (!n1.edges.has(p)) n1.edges.set(p, []);
+      if (!n2.edges.has(p)) n2.edges.set(p, []);
+      n1.edges.get(p).push(l);
+      n2.edges.get(p).push(l);
     });
-    links.push({
-      source: nodetable[n1],
-      target: nodetable[n2],
-      path: p,
-    })
+    links.push(l);
+  });
+  // determine the initial stories
+  var initials = d3.map();
+  nodes.forEach(function(n) {
+    n.edges.forEach(function(k,v) {
+      var l = linetable.get(k);
+      if (v.length == 1 && !l.nodes.length) {
+        l.nodes.push(n);
+      }
+    });
+  });
+  // follow the trail
+  lines.forEach(function(l) {
+    var curNode = l.nodes[0];
+    var edges = curNode.edges.get(l.id);
+    var curEdge;
+    var first = true;
+    do {
+      curEdge = first ? edges[0] : edges[0] == curEdge ? edges[1] : edges[0];
+      first = false;
+      curNode = curEdge.source == curNode ? curEdge.target : curEdge.source;
+      l.nodes.push(curNode);
+      edges = curNode.edges.get(l.id);
+    } while (edges.length != 1);
   });
 
   metro = metromap(d3.select("#svg-container"))
     .size([500, 400])
+    .lines(lines)
     .nodes(nodes)
     .links(links);
   //console.log(metro.nodes());
