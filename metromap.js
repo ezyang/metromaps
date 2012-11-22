@@ -338,11 +338,11 @@ function metromap(container) {
       .style("visibility", "hidden")
       .style("pointer-events", "all")
       .style("stroke-width", 9)
-      .on("mouseover", moveSelector)
-      .on("mousemove", moveSelector)
-      .on("mouseout", function() {dummySelector.style("visibility", "hidden")})
+      .on("mouseover", onlyEdit(moveSelector))
+      .on("mousemove", onlyEdit(moveSelector))
+      .on("mouseout", onlyEdit(function() {dummySelector.style("visibility", "hidden")}))
       // XXX bleh names: s/d/l/ or something
-      .on("click", function(d) {
+      .on("click", onlyEdit(function(d) {
         // alright, time to dick around with some node insertion
         var coords = d3.mouse(svg.node());
         var n = {id: "dummy" + dummyid, x: coords[0], y: coords[1], dummy: true, edges: d3.map()}
@@ -372,7 +372,7 @@ function metromap(container) {
           }
         });
         my(); // needs to update force layout yo
-      });
+      }));
 
     // When there are multiple lines running from a station, we need
     // to offset them from the center. But actually, this is pretty
