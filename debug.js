@@ -41,10 +41,6 @@ function debugForce(force, selection) {
       [ {name: "Restart",     f: function() { setplay(true);
                                               force.start(); } },
         {name: "Clear fixed", f: function() { force.nodes().forEach(function(n) {n.fixed = 0;}) } },
-        // US specific
-        // XXX kind of user unfriendly at the moment
-        {name: "Save", f: function() { localStorage.setItem("state", JSON.stringify(force.state())) }},
-        {name: "Reset", f: function() { if (confirm("Are you sure you want to reset? This will delete your saved data.")) { localStorage.setItem("state", null); initData(); } }},
       ]
   var btns = div.insert("span").text(" ");
   btns.selectAll(".btn").data(buttons)
@@ -125,4 +121,30 @@ function debugForce(force, selection) {
         getAlphaSlider().jq().slider("value", e.alpha);
       });
     });
+  function updateSliders() {
+    return selection.selectAll('.slider').each(function(d) {$(this).slider({value: d.range ? undefined : d.f(), values: d.range ? d.f() : undefined})});
+  }
+
+  var buttons2 =
+      [ {name: "Dump", f: function() { $("#jsonbox").val(JSON.stringify(force.state())); } },
+        {name: "Load", f: function() { force.state(JSON.parse($("#jsonbox").val())); force(); force.stop(); updateSliders(); }},
+        // US specific
+        // XXX kind of user unfriendly at the moment
+        {name: "Copy to LocalStorage", f: function() {  var json = JSON.stringify(force.state())
+                                            $("#jsonbox").val(JSON.stringify(force.state()));
+                                            localStorage.setItem("state", json)
+                                         }},
+        {name: "Delete from LocalStorage", f: function() { if (confirm("Are you sure you want to delete?")) { localStorage.setItem("state", null); } }},
+      ];
+  var btns2 = selection.insert("div");
+  btns2.selectAll(".btn").data(buttons2)
+    .enter()
+    .insert("button")
+    .attr('class', 'btn')
+    .on("click", function(d) {return d.f()})
+    .text(function(d) {return d.name})
+    .each(function() {$(this).button()});
+  btns2.jq().buttonset();
+
+  selection.insert('textarea').attr('cols', '60').attr("id", "jsonbox").property("value", localStorage.getItem("state"));
 }

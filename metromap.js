@@ -388,7 +388,8 @@ function metromap(container) {
       // pick some nice stroke rounding algo
       .style("fill", "none");
 
-    force.start(); // will call redraw
+    force.start();
+    redraw(); // force a redraw, in case we immediately stop
   }
 
   // apply the accessor function, but in the case of
@@ -471,6 +472,7 @@ function metromap(container) {
       linkStrength: my.linkStrength()(), linkDistance: my.linkDistance()(), size: my.size(), mode: my.mode()};
   }
   function setState(st) {
+    if (!st) return;
     var nodemap = d3.map();
     var linemap = d3.map();
     var linkmap = d3.map();
