@@ -31,7 +31,7 @@ function debugForce(force, selection) {
     .on("change", function() { setplay(this.checked); });
   function setplay(v) {
     play.property("checked", v); // XXX annoying
-    if (force.mode() == MetroMode.EDIT) force.paused(!v);
+    force.paused(!v);
     play.jq().button({ icons: { primary: !play.property("checked") ? "ui-icon-play" : "ui-icon-pause" }, text: false });
     play.jq().button("refresh");
   }
