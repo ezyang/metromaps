@@ -59,6 +59,13 @@ function initData(callback) {
     //   A -- B -- C -- D
     // reduces to:
     //   A -- D  (with edge weight = 3)
+    // XXX I think with links this becomes a bit more delicate,
+    // since a link still wants to be represented as a polyline
+    // including the removed nodes.  Essentially, if we have:
+    //   A -- B -- C
+    // Then if I click on "B" it should be promoted to a real node,
+    // and if I click on the edge "A -- B", then I should insert a
+    // dummy node
     d3.select(doc).selectAll("node").each(function () {
       var e = d3.select(this);
       var id = e.attr("id");
@@ -72,6 +79,7 @@ function initData(callback) {
         label: bits[0].trim(),
         //dummy: true,
         //date: format.parse(e.select("data[key='date']").text().trim()),
+        date: format.parse(bits[1].trim()),
         sx: sx,
         sy: sy,
         //x: sx/100,
