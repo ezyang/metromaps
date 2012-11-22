@@ -5,6 +5,7 @@ function debugForce(force, selection) {
   var divm = divr.insert('span');
   var div = divr.insert('span');
 
+  // us specific
   var modes = divm.insert("span").text(" ");
   modes.selectAll(".btn").data([
       {name: "Edit", mode: MetroMode.EDIT},
@@ -105,8 +106,8 @@ function debugForce(force, selection) {
               min: d.min,
               max: d.max,
               step: d.step,
-              value: d.f(),
-              values: d.range ? d.f() : undefined, // XXX hack
+              value: d.range ? undefined : d.f(),
+              values: d.range ? d.f() : undefined,
               range: d.range,
               slide: function(e, ui) {
                 d.f(d.range ? ui.values : ui.value);
