@@ -146,5 +146,5 @@ function debugForce(force, selection) {
     .each(function() {$(this).button()});
   btns2.jq().buttonset();
 
-  selection.insert('textarea').attr('cols', '60').attr("id", "jsonbox").property("value", localStorage.getItem("state"));
+  selection.insert('textarea').style("font-size", "8px").attr('rows', '10').attr('cols', '120').attr("id", "jsonbox").property("value", localStorage.getItem("state"));
 }
