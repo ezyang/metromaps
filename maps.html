@@ -90,6 +90,7 @@ function initData(callback) {
       nodetable.set(id, node);
       nodes.push(node);
     });
+    // parse out the various metro lines; we'll instantiate node later
     var lines = [];
     var linetable = d3.map();
     d3.select(doc).selectAll("key")
@@ -100,6 +101,7 @@ function initData(callback) {
         linetable.set(id, line);
         lines.push(line);
       });
+    // parse out the edges
     d3.select(doc).selectAll("edge").each(function () {
       var e = d3.select(this);
       var n1 = nodetable.get(e.attr("source"));
@@ -131,7 +133,7 @@ function initData(callback) {
         }
       });
     });
-    // follow the trail
+    // follow the trail (topological sort)
     lines.forEach(function(l) {
       var curNode = l.nodes[0];
       var edges = curNode.edges.get(l.id);
@@ -155,7 +157,6 @@ function initData(callback) {
 
 metro = metromap(d3.select("#svg-container"))
   .size([500, 400]);
-//console.log(metro.nodes());
 
 var state = localStorage.getItem("state");
 try {
@@ -165,9 +166,8 @@ try {
   metro();
   metro.stop();
 } catch(e) {
-  //throw e;
-  //console.log(e);
-  clear();
+  //throw e; // uncomment me if you want to debug a corrupt savefile
+  if (e == "nothing") clear();
 }
 
 function clear() {

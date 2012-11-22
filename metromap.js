@@ -101,6 +101,8 @@ var MetroMode = {
  *   nodes: Ordered list of nodes on this line
  * }
  *
+ * Checkout getState() and setState() for more canonical code.
+ *
  */
 function metromap(container) {
 
