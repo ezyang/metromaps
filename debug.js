@@ -1,22 +1,43 @@
 function debugForce(force, selection) {
 
-  var div = selection.insert('div');
-  // booleans are inverted XXX fix the naming
-  var pause = div.insert("input") // special support for pause
+  var divr = selection.insert('div');
+
+  var divm = divr.insert('span');
+  var div = divr.insert('span');
+
+  var modes = divm.insert("span").text(" ");
+  modes.selectAll(".btn").data([
+      {name: "Edit", mode: MetroMode.EDIT},
+      {name: "View", mode: MetroMode.VIEW}
+    ]).enter().insert("span").attr("class", "btn")
+      .call(function(span) {
+        span.insert("input")
+          .attr("type", "radio")
+          .attr("name", "debugmode")
+          .attr("id", function(_,i) {return "debugmode" + i})
+          .property("checked", function(d) {return force.mode() == d.mode})
+          .on("change", function(d) { force.mode(d.mode); div.style('visibility', d.mode == MetroMode.EDIT ? 'visible' : 'hidden'); })
+        span.insert("label")
+          .attr("for", function(_,i) {return "debugmode" + i})
+          .text(function(d) {return d.name});
+      });
+  modes.jq().buttonset();
+
+  var play = div.insert("input")
     .attr("type", "checkbox")
-    .attr("id", "debugpause")
+    .attr("id", "debugplay")
     .property("checked", !force.paused())
-    .on("change", function() {
-        force.paused(!this.checked);
-        pause.jq().button({ icons: { primary: !this.checked ? "ui-icon-play" : "ui-icon-pause" }, text: false });
-    });
-  div.insert("label").attr("for", "debugpause").text("Run");
-  pause.jq().button({ icons: { primary: "ui-icon-pause" }, text: false });
+    .on("change", function() { setplay(this.checked); });
+  function setplay(v) {
+    play.property("checked", v); // XXX annoying
+    if (force.mode() == MetroMode.EDIT) force.paused(!v);
+    play.jq().button({ icons: { primary: !play.property("checked") ? "ui-icon-play" : "ui-icon-pause" }, text: false });
+    play.jq().button("refresh");
+  }
+  div.insert("label").attr("for", "debugplay").text("Run");
+  play.jq().button({ icons: { primary: "ui-icon-pause" }, text: false });
   var buttons =
-      [ {name: "Restart",     f: function() { pause.property("checked", !false); // XXX annoying
-                                              force.paused(false);
-                                              pause.jq().button({ icons: { primary: "ui-icon-pause" }, text: false });
-                                              pause.jq().button("refresh");
+      [ {name: "Restart",     f: function() { setplay(true);
                                               force.start(); } },
         {name: "Clear fixed", f: function() { force.nodes().forEach(function(n) {n.fixed = 0;}) } },
       ]
@@ -33,31 +54,6 @@ function debugForce(force, selection) {
   function getAlphaSlider() {
     return selection.selectAll('.slider').filter(function (d) {return d.alpha});
   }
-
-  var modes = div.insert("span").text(" ");
-  modes.selectAll(".btn").data([
-      {name: "Edit", mode: MetroMode.EDIT},
-      {name: "View", mode: MetroMode.VIEW}
-    ]).enter().insert("span").attr("class", "btn")
-      .call(function(span) {
-        span.insert("input")
-          .attr("type", "radio")
-          .attr("name", "debugmode")
-          .attr("id", function(_,i) {return "debugmode" + i})
-          .property("checked", function(d) {return force.mode() == d.mode})
-          .on("change", function(d) {
-            force.mode(d.mode);
-            if (d.mode != MetroMode.EDIT) {
-              getAlphaSlider().jq().slider("value", 0).slider("disable");
-            } else {
-              getAlphaSlider().jq().slider("value", round(force.alpha)()).slider("enable");
-            }
-          })
-        span.insert("label")
-          .attr("for", function(_,i) {return "debugmode" + i})
-          .text(function(d) {return d.name});
-      });
-  modes.jq().buttonset();
 
   var oldalpha = 0.1;
   function neg(f) {

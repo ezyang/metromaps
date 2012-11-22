@@ -384,6 +384,7 @@ function metromap(container) {
   my.start = rm(force.start);
   my.resume = rm(force.resume);
   my.paused = rm(force.paused);
+  var oldPaused;
   my.mode = function(v) {
     if (!arguments.length) return mode;
     mode = v;
@@ -392,9 +393,11 @@ function metromap(container) {
       // XXX You can see that there are slight gaps from doing this.
       // See [DUMMYRENDER] for more information.
       dummyNodeTransition.style("opacity", 0);
-      force.stop();
+      oldPaused = my.paused();
+      my.paused(true);
     } else {
       dummyNodeTransition.style("opacity", 1);
+      my.paused(oldPaused);
     }
     return my;
   }

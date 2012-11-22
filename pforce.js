@@ -14,6 +14,7 @@
  *
  * Note for draggers: if you have installed a drag handler, strange
  * things may happen since the (x,y) coordinates were not updated.
+ * See https://github.com/mbostock/d3/issues/919
  *
  * Usage:
  *
