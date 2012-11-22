@@ -43,6 +43,11 @@ var MetroMode = {
  *    intercepted and buffered for when the visualization is unpaused.
  *    (Implemented by pforce.js)
  *
+ * state
+ *    A JSON-representable serialization of the entire state of the
+ *    force layout; enough information to reconstruct the layout of
+ *    the graph.  This includes force layout parameters.
+ *
  * These accessors directly correspond to their force layout
  * counterparts (though their behavior may be slightly modified):
  *
@@ -461,7 +466,9 @@ function metromap(container) {
     flinks = force.links().map(function(x) {
       return {id: x.id, source: x.source.id, target: x.target.id, path: x.path.map(idify)}
     });
-    return {nodes: fnodes, lines: flines, links: flinks};
+    return {nodes: fnodes, lines: flines, links: flinks,
+      octoforce: my.octoforce(), charge: my.charge(), gravity: my.gravity(), friction: my.friction(),
+      linkStrength: my.linkStrength()(), linkDistance: my.linkDistance()(), size: my.size(), mode: my.mode()};
   }
   function setState(st) {
     var nodemap = d3.map();
@@ -491,7 +498,17 @@ function metromap(container) {
       x.path = x.path.map(unid(linemap));
     });
     //console.log(flinks.map(function(x) {return x.path}));
-    my.nodes(nodemap.values()).lines(linemap.values()).links(linkmap.values());
+    my.nodes(nodemap.values())
+      .lines(linemap.values())
+      .links(linkmap.values())
+      .octoforce(st.octoforce)
+      .charge(st.charge)
+      .gravity(st.gravity)
+      .friction(st.friction)
+      .linkStrength(st.linkStrength)
+      .linkDistance(st.linkDistance)
+      .size(st.size)
+      .mode(st.mode);
   }
 
   my.state = function(v) {
