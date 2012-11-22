@@ -44,109 +44,127 @@
     <div id="debug-container"></div>
     <script>
 var metro; // for easy console access
-d3.xml("haitimap2.graphml", function(doc) {
-  var nodetable = d3.map();
-  var nodes = [];
-  var links = [];
-  var format = d3.time.format("%d/%m/%Y");
-  // TODO: The first step is to simplify our graph by removing all
-  // straight line segments of the graph.  The end result
-  // should be a new list of key nodes (nodes with adjacent edge
-  // count not equal to two) and edges for all of those nodes, with
-  // weight equal to the number of edges that they are representing.
-  // For example:
-  //   A -- B -- C -- D
-  // reduces to:
-  //   A -- D  (with edge weight = 3)
-  d3.select(doc).selectAll("node").each(function () {
-    var e = d3.select(this);
-    var id = e.attr("id");
-    var sx = parseInt(e.select("data[key='x']").text()),
-        sy = parseInt(e.select("data[key='y']").text());
-    var rawtitle = e.select("data[key='label']").text().trim();
-    // XXX price would have told me to use a regex
-    var bits = rawtitle.split("\t");
-    var node = {
-      id: id,
-      label: bits[0].trim(),
-      //dummy: true,
-      //date: format.parse(e.select("data[key='date']").text().trim()),
-      sx: sx,
-      sy: sy,
-      //x: sx/100,
-      //y: sy+200,
-      fixed: 0,
-      edges: d3.map(), // indexed by line
-    };
-    nodetable.set(id, node);
-    nodes.push(node);
-  });
-  var lines = [];
-  var linetable = d3.map();
-  d3.select(doc).selectAll("key")
-    .filter(function() {return d3.select(this).attr("for") == "edge"})
-    .each(function() {
-      var id = d3.select(this).attr("id");
-      var line = { id: id, nodes: [] };
-      linetable.set(id, line);
-      lines.push(line);
+function initData(callback) {
+  d3.xml("haitimap2.graphml", function(doc) {
+    var nodetable = d3.map();
+    var nodes = [];
+    var links = [];
+    var format = d3.time.format("%d/%m/%Y");
+    // TODO: The first step is to simplify our graph by removing all
+    // straight line segments of the graph.  The end result
+    // should be a new list of key nodes (nodes with adjacent edge
+    // count not equal to two) and edges for all of those nodes, with
+    // weight equal to the number of edges that they are representing.
+    // For example:
+    //   A -- B -- C -- D
+    // reduces to:
+    //   A -- D  (with edge weight = 3)
+    d3.select(doc).selectAll("node").each(function () {
+      var e = d3.select(this);
+      var id = e.attr("id");
+      var sx = parseInt(e.select("data[key='x']").text()),
+          sy = parseInt(e.select("data[key='y']").text());
+      var rawtitle = e.select("data[key='label']").text().trim();
+      // XXX price would have told me to use a regex
+      var bits = rawtitle.split("\t");
+      var node = {
+        id: id,
+        label: bits[0].trim(),
+        //dummy: true,
+        //date: format.parse(e.select("data[key='date']").text().trim()),
+        sx: sx,
+        sy: sy,
+        //x: sx/100,
+        //y: sy+200,
+        fixed: 0,
+        edges: d3.map(), // indexed by line
+      };
+      nodetable.set(id, node);
+      nodes.push(node);
     });
-  d3.select(doc).selectAll("edge").each(function () {
-    var e = d3.select(this);
-    var n1 = nodetable.get(e.attr("source"));
-    var n2 = nodetable.get(e.attr("target"));
-    var l = {
-      source: n1,
-      target: n2,
-      path: [],
-    };
-    e.selectAll("data").each(function() {
-      // XXX assuming that none of these are FALSE
-      var p = d3.select(this).attr("key");
-      l.path.push(linetable.get(p));
-      if (!n1.edges.has(p)) n1.edges.set(p, []);
-      if (!n2.edges.has(p)) n2.edges.set(p, []);
-      n1.edges.get(p).push(l);
-      n2.edges.get(p).push(l);
+    var lines = [];
+    var linetable = d3.map();
+    d3.select(doc).selectAll("key")
+      .filter(function() {return d3.select(this).attr("for") == "edge"})
+      .each(function() {
+        var id = d3.select(this).attr("id");
+        var line = { id: id, nodes: [] };
+        linetable.set(id, line);
+        lines.push(line);
+      });
+    d3.select(doc).selectAll("edge").each(function () {
+      var e = d3.select(this);
+      var n1 = nodetable.get(e.attr("source"));
+      var n2 = nodetable.get(e.attr("target"));
+      var l = {
+        id: e.attr("id"),
+        source: n1,
+        target: n2,
+        path: [],
+      };
+      e.selectAll("data").each(function() {
+        // XXX assuming that none of these are FALSE
+        var p = d3.select(this).attr("key");
+        l.path.push(linetable.get(p));
+        if (!n1.edges.has(p)) n1.edges.set(p, []);
+        if (!n2.edges.has(p)) n2.edges.set(p, []);
+        n1.edges.get(p).push(l);
+        n2.edges.get(p).push(l);
+      });
+      links.push(l);
     });
-    links.push(l);
-  });
-  // determine the initial stories
-  var initials = d3.map();
-  nodes.forEach(function(n) {
-    n.edges.forEach(function(k,v) {
-      var l = linetable.get(k);
-      if (v.length == 1 && !l.nodes.length) {
-        l.nodes.push(n);
-      }
+    // determine the initial stories
+    var initials = d3.map();
+    nodes.forEach(function(n) {
+      n.edges.forEach(function(k,v) {
+        var l = linetable.get(k);
+        if (v.length == 1 && !l.nodes.length) {
+          l.nodes.push(n);
+        }
+      });
     });
+    // follow the trail
+    lines.forEach(function(l) {
+      var curNode = l.nodes[0];
+      var edges = curNode.edges.get(l.id);
+      var curEdge;
+      var first = true;
+      do {
+        curEdge = first ? edges[0] : edges[0] == curEdge ? edges[1] : edges[0];
+        first = false;
+        curNode = curEdge.source == curNode ? curEdge.target : curEdge.source;
+        l.nodes.push(curNode);
+        edges = curNode.edges.get(l.id);
+      } while (edges.length != 1);
+    });
+    metro
+      .lines(lines)
+      .nodes(nodes)
+      .links(links);
+    metro();
   });
-  // follow the trail
-  lines.forEach(function(l) {
-    var curNode = l.nodes[0];
-    var edges = curNode.edges.get(l.id);
-    var curEdge;
-    var first = true;
-    do {
-      curEdge = first ? edges[0] : edges[0] == curEdge ? edges[1] : edges[0];
-      first = false;
-      curNode = curEdge.source == curNode ? curEdge.target : curEdge.source;
-      l.nodes.push(curNode);
-      edges = curNode.edges.get(l.id);
-    } while (edges.length != 1);
-  });
+}
 
-  metro = metromap(d3.select("#svg-container"))
-    .size([500, 400])
-    .lines(lines)
-    .nodes(nodes)
-    .links(links);
-  //console.log(metro.nodes());
+metro = metromap(d3.select("#svg-container"))
+  .size([500, 400]);
+//console.log(metro.nodes());
 
+var state = localStorage.getItem("state");
+try {
+  var parsed = JSON.parse(state);
+  if (!parsed) throw "nothing";
+  metro.state(parsed);
   metro();
-  slideshow(metro)(d3.select("#slideshow-controls"), d3.select("#slideshow-text"));
-  debugForce(metro, d3.select("#debug-container"));
-});
+  metro.stop();
+} catch(e) {
+  throw e;
+  console.log(e);
+  //localStorage.setItem("state", null);
+  initData();
+}
+
+slideshow(metro)(d3.select("#slideshow-controls"), d3.select("#slideshow-text"));
+debugForce(metro, d3.select("#debug-container"));
     </script>
   </body>
 </html>

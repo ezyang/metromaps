@@ -79,13 +79,21 @@ var MetroMode = {
  *    dummyLinks: Only set when a node is a dummy, it points to the
  *      unique two connecting edges, such that
  *         dummyLinks[0].target == dummyLinks[1].source
+ *    edges: d3.map of line identifiers to arrays of outgoing edges for
+ *      that line
  * }
  *
  * link :: {
+ *    id: Unique ID identifying the link
  *    source, target: Node objects the link is connected to.  At the
  *      moment, the directionality doesn't mean anything.
- *    path: List of path keys, which identify what paths are flowing
+ *    path: List of line objects, which identify what paths are flowing
  *      from these nodes
+ * }
+ *
+ * line :: {
+ *   id: Unique ID identifying this line
+ *   nodes: Ordered list of nodes on this line
  * }
  *
  */
@@ -427,6 +435,60 @@ function metromap(container) {
     if (!arguments.length) return captionPredicate;
     captionPredicate = v;
     redraw();
+    return my;
+  }
+
+  // essentially, these are copies of nodes/links/lines but with object
+  // references replaced with IDs
+  function idify(x) { return x.id }
+  function getState() {
+    fnodes = force.nodes().map(function(x) {
+      return {
+        id: x.id, label: x.label, date: x.date, sx: x.sx, sy: x.sy, x: x.x, y: x.y, fixed: x.fixed, dummy: x.dummy,
+        dummyLinks: x.dummyLinks ? x.dummyLinks.map(idify) : undefined,
+        edges: x.edges.entries().map(function(kv) {kv.value = kv.value.map(idify); return kv;})
+      }
+    });
+    flines = lines.map(function(x) {
+      return {id: x.id, nodes: x.nodes.map(idify)}
+    });
+    flinks = force.links().map(function(x) {
+      return {id: x.id, source: x.source.id, target: x.target.id, path: x.path.map(idify)}
+    });
+    return {nodes: fnodes, lines: flines, links: flinks};
+  }
+  function setState(st) {
+    var nodemap = d3.map();
+    var linemap = d3.map();
+    var linkmap = d3.map();
+    st.nodes.forEach(function(v) {nodemap.set(v.id, v)});
+    st.lines.forEach(function(v) {linemap.set(v.id, v)});
+    st.links.forEach(function(v) {linkmap.set(v.id, v)});
+    function unid(map) {return function(v) {return map.get(v)}}
+    // recompute links and maps
+    nodemap.forEach(function(_,x) {
+      var edges = d3.map();
+      x.edges.forEach(function(kv) {
+        edges.set(kv.key, kv.value.map(unid(linkmap)));
+      });
+      x.edges = edges;
+      x.dummyLinks = x.dummyLinks ? x.dummyLinks.map(unid(linkmap)) : undefined;
+    });
+    linemap.forEach(function(_,x) {
+      x.nodes = x.nodes.map(unid(nodemap));
+    });
+    linkmap.forEach(function(_,x) {
+      x.source = unid(nodemap)(x.source);
+      x.target = unid(nodemap)(x.target);
+      x.path = x.path.map(unid(linemap));
+    });
+    //console.log(flinks.map(function(x) {return x.path}));
+    my.nodes(nodemap.values()).lines(linemap.values()).links(linkmap.values());
+  }
+
+  my.state = function(v) {
+    if (!arguments.length) return getState();
+    setState(v);
     return my;
   }
 

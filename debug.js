@@ -41,6 +41,10 @@ function debugForce(force, selection) {
       [ {name: "Restart",     f: function() { setplay(true);
                                               force.start(); } },
         {name: "Clear fixed", f: function() { force.nodes().forEach(function(n) {n.fixed = 0;}) } },
+        // US specific
+        // XXX kind of user unfriendly at the moment
+        {name: "Save", f: function() { localStorage.setItem("state", JSON.stringify(force.state())) }},
+        {name: "Reset", f: function() { localStorage.setItem("state", null); initData(); }},
       ]
   var btns = div.insert("span").text(" ");
   btns.selectAll(".btn").data(buttons)
