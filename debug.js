@@ -44,7 +44,7 @@ function debugForce(force, selection) {
         // US specific
         // XXX kind of user unfriendly at the moment
         {name: "Save", f: function() { localStorage.setItem("state", JSON.stringify(force.state())) }},
-        {name: "Reset", f: function() { localStorage.setItem("state", null); initData(); }},
+        {name: "Reset", f: function() { if (confirm("Are you sure you want to reset? This will delete your saved data.")) { localStorage.setItem("state", null); initData(); } }},
       ]
   var btns = div.insert("span").text(" ");
   btns.selectAll(".btn").data(buttons)

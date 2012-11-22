@@ -99,6 +99,8 @@ var MetroMode = {
  */
 function metromap(container) {
 
+  var dummyid = 0;
+
   var svg = container.append("svg");
   var force = d3.layout.force() // some defaults
     .charge(-100)
@@ -338,9 +340,13 @@ function metromap(container) {
       .on("click", function(d) {
         // alright, time to dick around with some node insertion
         var coords = d3.mouse(svg.node());
-        var n = {x: coords[0], y: coords[1], dummy: true}
+        var n = {id: "dummy" + dummyid, x: coords[0], y: coords[1], dummy: true, edges: d3.map()}
         // XXX length of the resulting links should be adjusted
-        var l = {source: n, target: d.target, path: d.path}
+        var l = {id: "dummy" + dummyid, source: n, target: d.target, path: d.path}
+        dummyid++;
+        d.path.forEach(function(p) {
+          n.edges.set(p.id, [d, l]);
+        });
         // XXX two conjoined lines that split up require you to be able
         // to join two dummy nodes together which share a common
         // source/target, e.g.
@@ -468,10 +474,12 @@ function metromap(container) {
     // recompute links and maps
     nodemap.forEach(function(_,x) {
       var edges = d3.map();
-      x.edges.forEach(function(kv) {
-        edges.set(kv.key, kv.value.map(unid(linkmap)));
-      });
-      x.edges = edges;
+      if (x.edges) {
+        x.edges.forEach(function(kv) {
+          edges.set(kv.key, kv.value.map(unid(linkmap)));
+        });
+        x.edges = edges;
+      }
       x.dummyLinks = x.dummyLinks ? x.dummyLinks.map(unid(linkmap)) : undefined;
     });
     linemap.forEach(function(_,x) {

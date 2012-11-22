@@ -157,9 +157,11 @@ try {
   metro();
   metro.stop();
 } catch(e) {
-  throw e;
-  console.log(e);
-  //localStorage.setItem("state", null);
+  clear();
+}
+
+function clear() {
+  localStorage.setItem("state", null);
   initData();
 }
 
