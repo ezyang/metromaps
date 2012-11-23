@@ -77,13 +77,8 @@ function initData(callback) {
       var node = {
         id: id,
         label: bits[0].trim(),
-        //dummy: true,
         //date: format.parse(e.select("data[key='date']").text().trim()),
         date: format.parse(bits[1].trim()),
-        sx: sx,
-        sy: sy,
-        //x: sx/100,
-        //y: sy+200,
         fixed: 0,
         edges: d3.map(), // indexed by line
       };
@@ -121,6 +116,12 @@ function initData(callback) {
         n1.edges.get(p).push(l);
         n2.edges.get(p).push(l);
       });
+      /*
+      if (l.path.length > 1) {
+          // end nodes need some special handling
+          n1.
+      }
+      */
       links.push(l);
     });
     // determine the initial stories

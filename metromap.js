@@ -7,6 +7,13 @@ var MetroMode = {
     VIEW: 1, // user viewable (clicks open more information about stations)
 }
 
+var NodeType = {
+    PLAIN: 0,       // plain old node, probably is a plain old intersection or single path node
+    DUMMY: 1,       // fake station to allow for bending on a line
+    SUN: 2,         // centered node that is rendered but not connected to any links
+    SATELLITE: 3,   // offset node that is not rendered but connected to links
+}
+
 /**
  * This function inserts an SVG element into 'container', and then returns
  * a closure can be invoked to begin rendering the metro map.  Many of
@@ -73,17 +80,10 @@ var MetroMode = {
  *    id: Unique string identifier for this node, used for making
  *        references from captions
  *    label: String article title
- *    date: Date object of when article was published (XXX not
- *      implemented at the moment)
+ *    date: Date object of when article was published
  *    sx, sy: Advisory x and y coordinates, not used for anything ATM
  *    fixed: Bitmap indicating if the node is fixed w.r.t. force layout
- *    dummy: Whether or not this is a "dummy node".  Dummy nodes do not
- *      have id, label or date fields; they don't represent stories,
- *      just "kinks" in an edge.  They are guaranteed to have exactly
- *      two connecting edges.
- *    dummyLinks: Only set when a node is a dummy, it points to the
- *      unique two connecting edges, such that
- *         dummyLinks[0].target == dummyLinks[1].source
+ *    type: What type of node this is, as per NodeType
  *    edges: d3.map of line identifiers to arrays of outgoing edges for
  *      that line
  * }
@@ -298,27 +298,30 @@ function metromap(container) {
         redraw();
       }, function(d) {
         // Not allowed to delete non-dummies
-        if (d3.event.shiftKey && d.dummy) {
+        if (d3.event.shiftKey && d.type == NodeType.DUMMY) {
           // do-se-do
-          var n = d.dummyLinks[0].target;
-          d.dummyLinks[0].target = d.dummyLinks[1].target;
+          // XXX I'm not convinced this works when multiple edges are
+          // involved
+          var dlinks = d.edges.values()[0];
+          var n = dlinks[0].target;
+          dlinks[0].target = dlinks[1].target;
           // not necessary, since it will just get deleted
-          //d.dummyLinks[1].source = d.dummyLinks[0].source;
+          //dlinks[1].source = dlinks[0].source;
           // Warning: O(n) deletion
-          force.links().splice(force.links().indexOf(d.dummyLinks[1]), 1);
+          force.links().splice(force.links().indexOf(dlinks[1]), 1);
           force.nodes().splice(force.nodes().indexOf(n), 1);
           my();
         }
       }))
       .on("dblclick", onlyEdit(function(d) { d.fixed = !d.fixed; redraw(); }));
 
-    circle.filter(function(d) {return !d.dummy})
+    circle.filter(function(d) {return d.type != NodeType.DUMMY})
       .attr("r", 8)
       .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
       .attr("stroke-width", 3)
       .attr("fill", "#FFF");
 
-    circle.filter(function(d) {return d.dummy})
+    circle.filter(function(d) {return d.type == NodeType.DUMMY})
       .attr("r", 4)
       .attr("fill", function (d) { return d.fixed & 1 ? "#EEE" : "#000" });
 
@@ -347,7 +350,7 @@ function metromap(container) {
       .on("click", onlyEdit(function(d) {
         // alright, time to dick around with some node insertion
         var coords = d3.mouse(svg.node());
-        var n = {id: "dummy" + dummyid, x: coords[0], y: coords[1], dummy: true, edges: d3.map()}
+        var n = {id: "dummy" + dummyid, x: coords[0], y: coords[1], type: NodeType.DUMMY, edges: d3.map()}
         // XXX length of the resulting links should be adjusted
         var l = {id: "dummy" + dummyid, source: n, target: d.target, path: d.path}
         dummyid++;
@@ -360,9 +363,6 @@ function metromap(container) {
         force.nodes().push(n);
         force.links().push(l);
         d.target = n;
-        // [0].target and [1].source are n by convention
-        // XXX add an assert here
-        n.dummyLinks = [d, l]
         // need to update affected lines too
         d.path.forEach(function(line) {
           var i = line.nodes.indexOf(d.source);
@@ -434,7 +434,7 @@ function metromap(container) {
   my.mode = function(v) {
     if (!arguments.length) return mode;
     mode = v;
-    var dummyNodeTransition = svg.selectAll(".circle").filter(function(d) {return d.dummy}).transition().duration(dur);
+    var dummyNodeTransition = svg.selectAll(".circle").filter(function(d) {return d.type == NodeType.DUMMY}).transition().duration(dur);
     if (mode == MetroMode.VIEW) {
       dummyNodeTransition.style("opacity", 0);
       oldPaused = my.paused();
@@ -458,8 +458,7 @@ function metromap(container) {
   function getState() {
     fnodes = force.nodes().map(function(x) {
       return {
-        id: x.id, label: x.label, date: x.date, sx: x.sx, sy: x.sy, x: x.x, y: x.y, fixed: x.fixed, dummy: x.dummy,
-        dummyLinks: x.dummyLinks ? x.dummyLinks.map(idify) : undefined,
+        id: x.id, label: x.label, date: x.date, x: x.x, y: x.y, fixed: x.fixed, type: x.type,
         edges: x.edges.entries().map(function(kv) {kv.value = kv.value.map(idify); return kv;})
       }
     });
@@ -470,6 +469,7 @@ function metromap(container) {
       return {id: x.id, source: x.source.id, target: x.target.id, path: x.path.map(idify)}
     });
     return {nodes: fnodes, lines: flines, links: flinks,
+      dummyid: dummyid,
       octoforce: my.octoforce(), charge: my.charge(), gravity: my.gravity(), friction: my.friction(),
       linkStrength: my.linkStrength()(), linkDistance: my.linkDistance()(), size: my.size(), mode: my.mode()};
   }
@@ -491,7 +491,6 @@ function metromap(container) {
         });
         x.edges = edges;
       }
-      x.dummyLinks = x.dummyLinks ? x.dummyLinks.map(unid(linkmap)) : undefined;
     });
     linemap.forEach(function(_,x) {
       x.nodes = x.nodes.map(unid(nodemap));
@@ -502,6 +501,7 @@ function metromap(container) {
       x.path = x.path.map(unid(linemap));
     });
     //console.log(flinks.map(function(x) {return x.path}));
+    dummyid = st.dummyid;
     my.nodes(nodemap.values())
       .lines(linemap.values())
       .links(linkmap.values())
