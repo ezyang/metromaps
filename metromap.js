@@ -310,6 +310,10 @@ function metromap(container) {
           // Warning: O(n) deletion
           force.links().splice(force.links().indexOf(dlinks[1]), 1);
           force.nodes().splice(force.nodes().indexOf(n), 1);
+          // don't forget to kill the link owner
+          dlinks[0].path.forEach(function(l) {
+            l.nodes.splice(l.nodes.indexOf(d), 1);
+          });
           my();
         }
       }))
