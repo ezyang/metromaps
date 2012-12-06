@@ -15,6 +15,27 @@ var NodeType = {
 }
 
 /**
+ * A convenient function for taking a transformation (with rotation) on
+ * text and modifying it so that it always results in right-up text.
+ * Only knows about translate and rotate.  Auto-valigns the text.
+ */
+function textrotate(transform) {
+    return function (node) {
+        node.each(function() {
+            var t = d3.transform(d3.functor(transform).apply(this, arguments));
+            node.attr("alignment-baseline", "central");
+            if (t.rotate <= 90 && t.rotate >= -90) {
+                node.attr("transform", t.toString());
+            } else {
+                node.attr("text-anchor", "end");
+                t.rotate = (t.rotate > 0 ? -1 : 1) * (180 - Math.abs(t.rotate));
+                node.attr("transform", t.toString());
+            }
+        });
+    }
+}
+
+/**
  * This function inserts an SVG element into 'container', and then returns
  * a closure can be invoked to begin rendering the metro map.  Many of
  * the accessors on the closure are the same as force directed layout,
@@ -132,6 +153,8 @@ function metromap(container) {
       .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; });
+    svg.selectAll(".metrolabel")
+      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
     svg.selectAll(".line")
       .attr("x1", function(d) { return d.source.x; })
       .attr("y1", function(d) { return d.source.y; })
@@ -393,6 +416,17 @@ function metromap(container) {
       .style("stroke-width", 7)
       // pick some nice stroke rounding algo
       .style("fill", "none");
+
+    svg.selectAll(".metrolabel")
+      .data(force.nodes())
+      .enter()
+      .insert("g")
+      .attr("class", "metrolabel")
+      .filter(function(d) {return d.type != NodeType.DUMMY})
+      .insert("text")
+      .call(textrotate(function(d) { return "rotate(" + (d.labelrot ? d.labelrot : 0) + ")translate(12,0)" }))
+      .attr("fill", "black")
+      .text(function(d) {return d.shortlabel ? d.shortlabel : d.label.substr(0, 8)});
 
     force.start();
     redraw(); // force a redraw, in case we immediately stop
