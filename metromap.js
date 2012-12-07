@@ -194,7 +194,7 @@ function metromap(container) {
       .style("border", "1px solid #000")
       .style("border-radius", "4px")
       .style("padding", "5px")
-      .text(function(d) {return d.label});
+      .text(function(d) {return d.label + " : " + d3.time.format("%Y-%m-%d")(d.date)});
     caption
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")" });
     caption.exit().remove();
