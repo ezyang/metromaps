@@ -272,6 +272,8 @@ function metromap(container) {
 
   force.on("tick", function(e) {
     // try to make sure the metro lines have consistent time topology
+    // note that this can fairly easily be overridden by the
+    // octilinearity constraint
     var k = e.alpha;
     lines.forEach(function(l) {
       var i;
