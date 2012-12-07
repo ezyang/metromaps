@@ -431,15 +431,20 @@ function metromap(container) {
       .attr("fill", "black")
       .text(function(d) {return d.shortlabel ? d.shortlabel : d.label.substr(0, 8)})
       .call(d3.behavior.drag()
-              .on("dragstart", function (d) { d.fixed |= 2; })
-              .on("drag", function(d) {
-                  var coord = d3.mouse(svg.node());
-                  var dx = coord[0] - d.x;
-                  var dy = coord[1] - d.y;
-                  d.labelrot = Math.atan2(dy,dx) * 180 / Math.PI;
-                  redraw();
-              })
-              .on("dragend", function(d) { d.fixed &= 1; })
+              .on("dragstart", onlyEdit(function (d) { d.fixed |= 2; }))
+              .on("drag", onlyEdit(function(d) {
+                var coord = d3.mouse(svg.node());
+                var dx = coord[0] - d.x;
+                var dy = coord[1] - d.y;
+                d.labelrot = Math.atan2(dy,dx) * 180 / Math.PI;
+                console.log(d3.event);
+                if (d3.event.sourceEvent.shiftKey) { // odd...
+                  // snap to
+                  d.labelrot = Math.round(d.labelrot / 45) * 45
+                }
+                redraw();
+              }))
+              .on("dragend", onlyEdit(function(d) { d.fixed &= 1; }))
               );
 
     force.start();
