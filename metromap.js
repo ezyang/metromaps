@@ -515,7 +515,7 @@ function metromap(container) {
   function getState() {
     fnodes = force.nodes().map(function(x) {
       return {
-        id: x.id, label: x.label, date: x.date, x: x.x, y: x.y, fixed: x.fixed, type: x.type,
+          id: x.id, label: x.label, date: x.date, x: x.x, y: x.y, fixed: x.fixed, type: x.type, labelrot: x.labelrot,
         edges: x.edges.entries().map(function(kv) {kv.value = kv.value.map(idify); return kv;})
       }
     });

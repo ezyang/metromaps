@@ -24,7 +24,21 @@ function debugForce(force, selection) {
       });
   modes.jq().buttonset();
 
-  var play = div.insert("input")
+  var labeltog = div.insert("input")
+    .attr("type", "checkbox")
+    .attr("id", "debuglabeltog")
+    .on("change", function() {
+      if (this.checked) {
+        d3.selectAll(".metrolabel").style("display", "inherit");
+      } else {
+        d3.selectAll(".metrolabel").style("display", "none");
+      }
+    })
+    .property("checked", true);
+  div.insert("label").attr("for", "debuglabeltog").text("Labels");
+  labeltog.jq().button();
+
+  var play = div.insert("span").text(" ").insert("input")
     .attr("type", "checkbox")
     .attr("id", "debugplay")
     .property("checked", !force.paused())
