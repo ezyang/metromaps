@@ -25,6 +25,7 @@ function textrotate(transform) {
             var t = d3.transform(d3.functor(transform).apply(this, arguments));
             node.attr("alignment-baseline", "central");
             if (t.rotate <= 90 && t.rotate >= -90) {
+                node.attr("text-anchor", "begin");
                 node.attr("transform", t.toString());
             } else {
                 node.attr("text-anchor", "end");
@@ -154,7 +155,10 @@ function metromap(container) {
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; });
     svg.selectAll(".metrolabel")
-      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+      .each(function (d) {
+        d3.select(this).selectAll("text").call(textrotate("rotate(" + (d.labelrot ? d.labelrot : 0) + ")translate(12,0)"));
+      });
     svg.selectAll(".line")
       .attr("x1", function(d) { return d.source.x; })
       .attr("y1", function(d) { return d.source.y; })
@@ -424,9 +428,19 @@ function metromap(container) {
       .attr("class", "metrolabel")
       .filter(function(d) {return d.type != NodeType.DUMMY})
       .insert("text")
-      .call(textrotate(function(d) { return "rotate(" + (d.labelrot ? d.labelrot : 0) + ")translate(12,0)" }))
       .attr("fill", "black")
-      .text(function(d) {return d.shortlabel ? d.shortlabel : d.label.substr(0, 8)});
+      .text(function(d) {return d.shortlabel ? d.shortlabel : d.label.substr(0, 8)})
+      .call(d3.behavior.drag()
+              .on("dragstart", function (d) { d.fixed |= 2; })
+              .on("drag", function(d) {
+                  var coord = d3.mouse(svg.node());
+                  var dx = coord[0] - d.x;
+                  var dy = coord[1] - d.y;
+                  d.labelrot = Math.atan2(dy,dx) * 180 / Math.PI;
+                  redraw();
+              })
+              .on("dragend", function(d) { d.fixed &= 1; })
+              );
 
     force.start();
     redraw(); // force a redraw, in case we immediately stop
