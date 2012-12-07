@@ -271,6 +271,26 @@ function metromap(container) {
   };
 
   force.on("tick", function(e) {
+    // try to make sure the metro lines have consistent time topology
+    var k = e.alpha;
+    lines.forEach(function(l) {
+      var begin = l.nodes[0];
+      var end = l.nodes[l.nodes.length-1];
+      if (begin.date > end.date) {
+        begin = end;
+        end = l.nodes[0];
+      }
+      if (begin.x > end.x) {
+        var delta = begin.x - end.x;
+        begin.x -= delta/2 * k;
+        end.x += delta/2 * k;
+      }
+      if (begin.y > end.y) {
+        var delta = begin.y - end.y;
+        begin.y -= delta/2 * k;
+        end.y += delta/2 * k;
+      }
+    });
     // enforce octilinearity (hard constraint)
     var k = octoscale(e.alpha);
     force.links().forEach(function(link) {
