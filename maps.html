@@ -45,7 +45,7 @@
     <script>
 var metro; // for easy console access
 function initData(callback) {
-  d3.xml("haitimap2.graphml", function(doc) {
+  d3.xml("greek2.graphml", function(doc) {
     var nodetable = d3.map();
     var nodes = [];
     var links = [];
@@ -77,8 +77,8 @@ function initData(callback) {
       var node = {
         id: id,
         label: bits[0].trim(),
-        //date: format.parse(e.select("data[key='date']").text().trim()),
-        date: format.parse(bits[1].trim()),
+        date: format.parse(e.select("data[key='date']").text().trim()),
+        //date: format.parse(bits[1].trim()),
         fixed: 0,
         edges: d3.map(), // indexed by line
       };
