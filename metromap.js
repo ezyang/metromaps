@@ -533,7 +533,7 @@ function metromap(container) {
   function getState() {
     fnodes = force.nodes().map(function(x) {
       return {
-          id: x.id, label: x.label, date: x.date, x: x.x, y: x.y, fixed: x.fixed, type: x.type, labelrot: x.labelrot,
+          id: x.id, label: x.label, date: x.date.toString(), x: x.x, y: x.y, fixed: x.fixed, type: x.type, labelrot: x.labelrot,
         edges: x.edges.entries().map(function(kv) {kv.value = kv.value.map(idify); return kv;})
       }
     });
@@ -553,7 +553,7 @@ function metromap(container) {
     var nodemap = d3.map();
     var linemap = d3.map();
     var linkmap = d3.map();
-    st.nodes.forEach(function(v) {nodemap.set(v.id, v)});
+    st.nodes.forEach(function(v) {v.date = new Date(v.date); nodemap.set(v.id, v)});
     st.lines.forEach(function(v) {linemap.set(v.id, v)});
     st.links.forEach(function(v) {linkmap.set(v.id, v)});
     function unid(map) {return function(v) {return map.get(v)}}
