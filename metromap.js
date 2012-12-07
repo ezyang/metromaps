@@ -274,21 +274,20 @@ function metromap(container) {
     // try to make sure the metro lines have consistent time topology
     var k = e.alpha;
     lines.forEach(function(l) {
-      var begin = l.nodes[0];
-      var end = l.nodes[l.nodes.length-1];
-      if (begin.date > end.date) {
-        begin = end;
-        end = l.nodes[0];
-      }
-      if (begin.x > end.x) {
-        var delta = begin.x - end.x;
-        begin.x -= delta/2 * k;
-        end.x += delta/2 * k;
-      }
-      if (begin.y > end.y) {
-        var delta = begin.y - end.y;
-        begin.y -= delta/2 * k;
-        end.y += delta/2 * k;
+      var i;
+      for (i = 0; i < l.nodes.length - 1; i++) {
+        var begin = l.nodes[i];
+        var end = l.nodes[i+1];
+        if (begin.x > end.x) {
+          var delta = begin.x - end.x;
+          begin.x -= delta/2 * k;
+          end.x += delta/2 * k;
+        }
+        if (begin.y > end.y) {
+          var delta = begin.y - end.y;
+          begin.y -= delta/2 * k;
+          end.y += delta/2 * k;
+        }
       }
     });
     // enforce octilinearity (hard constraint)
