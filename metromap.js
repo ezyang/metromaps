@@ -437,7 +437,6 @@ function metromap(container) {
                 var dx = coord[0] - d.x;
                 var dy = coord[1] - d.y;
                 d.labelrot = Math.atan2(dy,dx) * 180 / Math.PI;
-                console.log(d3.event);
                 if (d3.event.sourceEvent.shiftKey) { // odd...
                   // snap to
                   d.labelrot = Math.round(d.labelrot / 45) * 45
