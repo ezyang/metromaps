@@ -82,7 +82,7 @@ function debugForce(force, selection) {
       {name: 'Gravity',       min: 0, max: 0.3, step: 0.01,    f: force.gravity},
       {name: 'Friction',      min: 0, max: 1,   step: 0.01,    f: force.friction},
       {name: 'Link strength', min: 0, max: 1,   step: 0.01,    f: ap2(force.linkStrength),  restart: true},
-      {name: 'Link distance', min: 0, max: 80,  step: 1,       f: ap2(force.linkDistance),  restart: true},
+      {name: 'Link distance', min: 0, max: 200,  step: 1,       f: ap2(force.linkDistance),  restart: true},
       {name: 'Alpha',         min: 0, max: 0.1, step: 0.00001, f: round(force.alpha),       skip: true, alpha: true},
       {name: 'Octoforce'    , min: 0, max: 1,   step: 0.001,   f: force.octoforce,          range: true},
     ];
