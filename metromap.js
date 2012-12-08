@@ -138,13 +138,6 @@ function metromap(container) {
       .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; });
-    /*
-    svg.selectAll(".metrolabel")
-      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
-      .each(function (d) {
-        d3.select(this).selectAll("text").call(textrotate("rotate(" + (d.labelrot ? d.labelrot : 0) + ")translate(12,0)"));
-      });
-      */
     svg.selectAll(".line")
       .attr("x1", function(d) { return d.source.x; })
       .attr("y1", function(d) { return d.source.y; })
@@ -161,37 +154,6 @@ function metromap(container) {
           .attr("x", d.textoffset ? d.textoffset[0] : 0)
           .attr("y", d.textoffset ? d.textoffset[1] : 0);
       })
-
-    // XXX putting this here is pretty expensive, since we need to
-    // compute the filter every tick (though fortunately we don't
-    // have many nodes)
-    // NOTE these go "on top" of nodes and don't need to be accounted for in
-    // layout
-    // XXX caption width/height should be configurable
-    /*
-    var caption = svg.selectAll(".caption").data(force.nodes().filter(captionPredicate), function(n) {return n.id});
-    // XXX TODO nice triangle for the things
-    caption
-      .enter()
-      .append("g")
-      .attr("class", "caption")
-      .insert("foreignObject")
-      .attr("width", capWidth)
-      // XXX this does poorly if we wrap around to a third line...
-      // maybe with the triangle we can just adjust it automatically
-      .attr("height", capHeight)
-      .attr("x", -capWidth/2)
-      .attr("y", -capHeight/2-5)
-      .insert("xhtml:div")
-      .style("background", "#FFF")
-      .style("border", "1px solid #000")
-      .style("border-radius", "4px")
-      .style("padding", "5px")
-      .text(function(d) {return d.label + " : " + d3.time.format("%Y-%m-%d")(d.date)});
-    caption
-      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")" });
-    caption.exit().remove();
-    */
   }
 
   // XXX the entire regime here is a little misguided, see also
@@ -331,7 +293,7 @@ function metromap(container) {
     redraw();
   });
 
-  function my() {
+  function my(updateOnly) {
     var cdata = svg.selectAll(".circle")
       .data(force.nodes());
     cdata.exit().remove();
@@ -511,7 +473,7 @@ function metromap(container) {
       */
 
     force.start();
-    redraw(); // force a redraw, in case we immediately stop
+    if (!updateOnly) redraw(); // force a redraw, in case we immediately stop
   }
 
   // apply the accessor function, but in the case of
@@ -628,8 +590,8 @@ function metromap(container) {
       .lines(linemap.values())
       .links(linkmap.values())
       .octoforce(st.octoforce)
-      .monoforce(st.monoforce)
-      .timeforce(st.timeforce)
+      .monoforce(st.monoforce ? st.monoforce : [0,0])
+      .timeforce(st.timeforce ? st.timeforce : [0,0])
       .charge(st.charge)
       .gravity(st.gravity)
       .friction(st.friction)
@@ -638,6 +600,34 @@ function metromap(container) {
       .size(st.size)
       .mode(st.mode);
   }
+
+  function animate(dur) {
+    my(true);
+    // XXX use precomputed selection for efficiency (but remember to
+    // update on changes)
+    svg.selectAll(".circle").transition().duration(dur)
+      .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
+      .attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; });
+    svg.selectAll(".line").transition().duration(dur)
+      .attr("x1", function(d) { return d.source.x; })
+      .attr("y1", function(d) { return d.source.y; })
+      .attr("x2", function(d) { return d.target.x; })
+      .attr("y2", function(d) { return d.target.y; });
+    var line = d3.svg.line().x(function(d) {return d.x}).y(function(d) {return d.y});
+    svg.selectAll(".metroline").transition().duration(dur)
+      .attr("d", function(l) { return line(l.nodes); });
+
+    svg.selectAll(".metrotext").transition().duration(dur)
+      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")" })
+      .each(function(d) {
+        d3.select(this).selectAll(".fo").transition().duration(dur)
+          .attr("x", d.textoffset ? d.textoffset[0] : 0)
+          .attr("y", d.textoffset ? d.textoffset[1] : 0);
+      })
+    return my;
+  }
+  my.animate = animate;
 
   my.state = function(v) {
     if (!arguments.length) return getState();
