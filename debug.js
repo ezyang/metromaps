@@ -54,6 +54,7 @@ function debugForce(force, selection) {
   var buttons =
       [ {name: "Restart",     f: function() { setplay(true);
                                               force.start(); } },
+        {name: "Fix all", f: function() { force.nodes().forEach(function(n) {n.fixed = 1;}) } },
         {name: "Clear fixed", f: function() { force.nodes().forEach(function(n) {n.fixed = 0;}) } },
       ]
   var btns = div.insert("span").text(" ");
