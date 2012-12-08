@@ -606,8 +606,7 @@ function metromap(container) {
 
   function animate(dur) {
     my(true);
-    // XXX use precomputed selection for efficiency (but remember to
-    // update on changes)
+    // XXX code duplication
     svg.selectAll(".circle").transition().duration(dur)
       .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
       .attr("cx", function(d) { return d.x; })
@@ -617,6 +616,9 @@ function metromap(container) {
       .attr("y1", function(d) { return d.source.y; })
       .attr("x2", function(d) { return d.target.x; })
       .attr("y2", function(d) { return d.target.y; });
+    // XXX This doesn't work right if the polyline point mapping has
+    // changed (dummy nodes were added or removed).  Doing this properly
+    // is effort.
     var line = d3.svg.line().x(function(d) {return d.x}).y(function(d) {return d.y});
     svg.selectAll(".metroline").transition().duration(dur)
       .attr("d", function(l) { return line(l.nodes); });
