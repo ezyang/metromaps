@@ -439,8 +439,11 @@ function metromap(container) {
       .style("height", capHeight + "px")
       .style("display", "table-cell")
       .style("font-size", "12px")
+      .style("line-height", "1.2")
       .style("vertical-align", "bottom")
-      .style("text-align", "center");
+      .style("text-align", "center")
+      .insert("span")
+      .style("background", "rgba(255,255,255,0.7)"); // would be nice if we could get rid of spacing, ALAS!
     textdiv.insert("span").text(function(d) {return d.label});
     textdiv.insert("br");
     textdiv.insert("span").text(function(d) {return d3.time.format("%Y-%m-%d")(d.date)});
