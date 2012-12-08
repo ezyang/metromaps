@@ -42,8 +42,9 @@
         </td>
       </tr>
     </table>
-    <div>(Press SHIFT to delete nodes.)</div>
-    <div id="debug-container"></div>
+    <div id="debug-container">
+      <div>(Press SHIFT to delete nodes.)</div>
+    </div>
     <script>
 var metro; // for easy console access
 function initData(callback) {
@@ -179,7 +180,11 @@ function clear() {
 }
 
 slideshow(metro)(d3.select("#slideshow-controls"), d3.select("#slideshow-text"));
-debugForce(metro, d3.select("#debug-container"));
+if (window.location.hash == "#debug") {
+  debugForce(metro, d3.select("#debug-container"));
+} else {
+  d3.select("#debug-container").style("display", "none");
+}
     </script>
   </body>
 </html>
