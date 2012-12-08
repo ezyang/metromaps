@@ -184,7 +184,7 @@ if (window.location.hash == "#debug") {
   debugForce(metro, d3.select("#debug-container"));
 } else {
   d3.select("#debug-container").style("display", "none");
-  d3.json("sample.json", function(doc) {
+  d3.json("preserving.json", function(doc) {
     metro.state(doc);
     metro();
     metro.mode(MetroMode.VIEW);

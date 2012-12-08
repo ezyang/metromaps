@@ -265,7 +265,8 @@ function metromap(container) {
     // try to make sure the metro lines have consistent time topology
     // note that this can fairly easily be overridden by the
     // octilinearity constraint
-    var k = 0.5;
+    var k = 1.0;
+    /*
     lines.forEach(function(l) {
       var i;
       for (i = 0; i < l.nodes.length - 1; i++) {
@@ -282,6 +283,18 @@ function metromap(container) {
           end.y += delta/2 * k;
         }
       }
+    });
+    */
+    // another way of doing it: try to enforce "time boundaries"
+    var timescale = d3.time.scale()
+        .domain(d3.extent(force.nodes(), function(d) {return d.date}))
+        .range([70, force.size()[0]-70]);
+    force.nodes().forEach(function(node) {
+      if (node.type == NodeType.DUMMY) return;
+      var dx = node.x - timescale(node.date);
+      //console.log(timescale(node.date));
+      node.x -= dx * k;
+      //node.x = timescale(node.date);
     });
     // enforce octilinearity (hard constraint)
     var k = octoscale(e.alpha);
@@ -564,7 +577,7 @@ function metromap(container) {
   function getState() {
     fnodes = force.nodes().map(function(x) {
       return {
-          id: x.id, label: x.label, date: x.date.toString(), x: x.x, y: x.y, fixed: x.fixed, type: x.type, labelrot: x.labelrot, textoffset: x.textoffset,
+        id: x.id, label: x.label, date: x.date ? x.date.toString() : undefined, x: x.x, y: x.y, fixed: x.fixed, type: x.type, labelrot: x.labelrot, textoffset: x.textoffset,
         edges: x.edges.entries().map(function(kv) {kv.value = kv.value.map(idify); return kv;})
       }
     });
