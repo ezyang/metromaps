@@ -125,8 +125,11 @@ function metromap(container) {
       lines             = [],
       captionPredicate  = function() {return false;};
 
-  // the range of this scale is controlled by 'octoforce'
+  // the ranges of this scale is controlled by 'octoforce', 'monoforce'
+  // and 'timeforce'
   var octoscale = d3.scale.linear().domain([0.1,0]).range([0,0]);
+  var monoscale = d3.scale.linear().domain([0.1,0]).range([0,0]);
+  var timescale = d3.scale.linear().domain([0.1,0]).range([0,0]);
 
   function redraw() {
     // XXX use precomputed selection for efficiency (but remember to
@@ -265,8 +268,7 @@ function metromap(container) {
     // try to make sure the metro lines have consistent time topology
     // note that this can fairly easily be overridden by the
     // octilinearity constraint
-    var k = 1.0;
-    /*
+    var k = monoscale(e.alpha);
     lines.forEach(function(l) {
       var i;
       for (i = 0; i < l.nodes.length - 1; i++) {
@@ -284,17 +286,15 @@ function metromap(container) {
         }
       }
     });
-    */
+    var k = timescale(e.alpha);
     // another way of doing it: try to enforce "time boundaries"
-    var timescale = d3.time.scale()
+    var timelate = d3.time.scale()
         .domain(d3.extent(force.nodes(), function(d) {return d.date}))
         .range([70, force.size()[0]-70]);
     force.nodes().forEach(function(node) {
       if (node.type == NodeType.DUMMY) return;
-      var dx = node.x - timescale(node.date);
-      //console.log(timescale(node.date));
+      var dx = node.x - timelate(node.date);
       node.x -= dx * k;
-      //node.x = timescale(node.date);
     });
     // enforce octilinearity (hard constraint)
     var k = octoscale(e.alpha);
@@ -524,6 +524,8 @@ function metromap(container) {
   }
 
   my.octoforce = rm(octoscale.range);
+  my.monoforce = rm(monoscale.range);
+  my.timeforce = rm(timescale.range);
   my.nodes = rm(force.nodes);
   my.links = rm(force.links);
   my.lines = function(v) {
@@ -590,7 +592,7 @@ function metromap(container) {
     });
     return {nodes: fnodes, lines: flines, links: flinks,
       dummyid: dummyid,
-      octoforce: my.octoforce(), charge: my.charge(), gravity: my.gravity(), friction: my.friction(),
+      octoforce: my.octoforce(), timeforce: my.timeforce(), monoforce: my.monoforce(), charge: my.charge(), gravity: my.gravity(), friction: my.friction(),
       linkStrength: my.linkStrength()(), linkDistance: my.linkDistance()(), size: my.size(), mode: my.mode()};
   }
   function setState(st) {
@@ -626,6 +628,8 @@ function metromap(container) {
       .lines(linemap.values())
       .links(linkmap.values())
       .octoforce(st.octoforce)
+      .monoforce(st.monoforce)
+      .timeforce(st.timeforce)
       .charge(st.charge)
       .gravity(st.gravity)
       .friction(st.friction)

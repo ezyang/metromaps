@@ -99,6 +99,8 @@ function debugForce(force, selection) {
       {name: 'Link distance', min: 0, max: 200,  step: 1,       f: ap2(force.linkDistance),  restart: true},
       {name: 'Alpha',         min: 0, max: 0.1, step: 0.00001, f: round(force.alpha),       skip: true, alpha: true},
       {name: 'Octoforce'    , min: 0, max: 1,   step: 0.001,   f: force.octoforce,          range: true},
+      {name: 'Monoforce'    , min: 0, max: 1,   step: 0.001,   f: force.monoforce,          range: true},
+      {name: 'Timeforce'    , min: 0, max: 1,   step: 0.001,   f: force.timeforce,          range: true},
     ];
   selection.insert('table').selectAll('tr').data(sliders)
     .enter()
