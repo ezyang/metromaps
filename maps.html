@@ -17,7 +17,7 @@
     <script src="debug.js"></script>
     <style>
       #controls {vertical-align:top; width:17em;}
-      svg {border-left: 1px solid #CCC;}
+      svg {border-bottom: 1px solid #CCC;}
       #debug-container {margin:0 1em;}
       #controls td {padding: 0 0.5em 0 0;}
       #debug-container td {padding: 0 0.5em;}
@@ -32,11 +32,13 @@
     <!--<h1>Metro Maps of the News</h1>-->
     <table>
       <tr>
+        <td id="svg-container">
+        </td>
+      </tr>
+      <tr>
         <td id="controls">
           <div id="slideshow-controls"></div>
           <div id="slideshow-text"></div>
-        </td>
-        <td id="svg-container">
         </td>
       </tr>
     </table>
@@ -157,7 +159,7 @@ function initData(callback) {
 }
 
 metro = metromap(d3.select("#svg-container"))
-  .size([900, 600]);
+  .size([1000, 600]);
 
 var state = localStorage.getItem("state");
 try {
