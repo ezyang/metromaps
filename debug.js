@@ -29,9 +29,9 @@ function debugForce(force, selection) {
     .attr("id", "debuglabeltog")
     .on("change", function() {
       if (this.checked) {
-        d3.selectAll(".metrolabel").style("display", "inherit");
+        d3.selectAll(".metrotext").style("display", "inherit");
       } else {
-        d3.selectAll(".metrolabel").style("display", "none");
+        d3.selectAll(".metrotext").style("display", "none");
       }
     })
     .property("checked", true);

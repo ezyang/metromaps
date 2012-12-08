@@ -15,28 +15,6 @@ var NodeType = {
 }
 
 /**
- * A convenient function for taking a transformation (with rotation) on
- * text and modifying it so that it always results in right-up text.
- * Only knows about translate and rotate.  Auto-valigns the text.
- */
-function textrotate(transform) {
-    return function (node) {
-        node.each(function() {
-            var t = d3.transform(d3.functor(transform).apply(this, arguments));
-            node.attr("alignment-baseline", "central");
-            if (t.rotate <= 90 && t.rotate >= -90) {
-                node.attr("text-anchor", "begin");
-                node.attr("transform", t.toString());
-            } else {
-                node.attr("text-anchor", "end");
-                t.rotate = (t.rotate > 0 ? -1 : 1) * (180 - Math.abs(t.rotate));
-                node.attr("transform", t.toString());
-            }
-        });
-    }
-}
-
-/**
  * This function inserts an SVG element into 'container', and then returns
  * a closure can be invoked to begin rendering the metro map.  Many of
  * the accessors on the closure are the same as force directed layout,
@@ -133,10 +111,13 @@ function metromap(container) {
   var svg = container.append("svg");
   var force = d3.layout.force() // some defaults
     .charge(-100)
-    .gravity(0.1)
+    .gravity(0.05)
     .linkStrength(1)
-    .linkDistance(40);
+    .linkDistance(80);
   d3_layout_force_pausable(force);
+
+  var capWidth = 130;
+  var capHeight = 60;
 
   var color             = d3.scale.category10(),
       dur               = 500,
@@ -145,7 +126,7 @@ function metromap(container) {
       captionPredicate  = function() {return false;};
 
   // the range of this scale is controlled by 'octoforce'
-  var octoscale = d3.scale.linear().domain([0.1,0]).range([0,1]);
+  var octoscale = d3.scale.linear().domain([0.1,0]).range([0,0]);
 
   function redraw() {
     // XXX use precomputed selection for efficiency (but remember to
@@ -154,11 +135,13 @@ function metromap(container) {
       .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; });
+    /*
     svg.selectAll(".metrolabel")
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
       .each(function (d) {
         d3.select(this).selectAll("text").call(textrotate("rotate(" + (d.labelrot ? d.labelrot : 0) + ")translate(12,0)"));
       });
+      */
     svg.selectAll(".line")
       .attr("x1", function(d) { return d.source.x; })
       .attr("y1", function(d) { return d.source.y; })
@@ -168,14 +151,16 @@ function metromap(container) {
     svg.selectAll(".metroline")
       .attr("d", function(l) { return line(l.nodes); });
 
+    svg.selectAll(".metrotext")
+      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")" });
+
     // XXX putting this here is pretty expensive, since we need to
     // compute the filter every tick (though fortunately we don't
     // have many nodes)
     // NOTE these go "on top" of nodes and don't need to be accounted for in
     // layout
     // XXX caption width/height should be configurable
-    var capWidth = 240;
-    var capHeight = 100;
+    /*
     var caption = svg.selectAll(".caption").data(force.nodes().filter(captionPredicate), function(n) {return n.id});
     // XXX TODO nice triangle for the things
     caption
@@ -198,6 +183,7 @@ function metromap(container) {
     caption
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")" });
     caption.exit().remove();
+    */
   }
 
   // XXX the entire regime here is a little misguided, see also
@@ -274,7 +260,7 @@ function metromap(container) {
     // try to make sure the metro lines have consistent time topology
     // note that this can fairly easily be overridden by the
     // octilinearity constraint
-    var k = e.alpha;
+    var k = 0.5;
     lines.forEach(function(l) {
       var i;
       for (i = 0; i < l.nodes.length - 1; i++) {
@@ -442,6 +428,28 @@ function metromap(container) {
       // pick some nice stroke rounding algo
       .style("fill", "none");
 
+    var textdiv = svg.selectAll(".metrotext")
+      .data(force.nodes())
+      .enter()
+      .insert("g")
+      .attr("class", "metrotext")
+      .filter(function(d) {return d.type != NodeType.DUMMY})
+      .insert("foreignObject")
+      .attr("width", capWidth)
+      .attr("height", capHeight)
+      .attr("x", -capWidth/2)
+      .attr("y", -capHeight-10)
+      .insert("xhtml:div")
+      .style("height", capHeight + "px")
+      .style("display", "table-cell")
+      .style("font-size", "12px")
+      .style("vertical-align", "bottom")
+      .style("text-align", "center");
+    textdiv.insert("span").text(function(d) {return d.label});
+    textdiv.insert("br");
+    textdiv.insert("span").text(function(d) {return d3.time.format("%Y-%m-%d")(d.date)});
+
+    /*
     svg.selectAll(".metrolabel")
       .data(force.nodes())
       .enter()
@@ -466,6 +474,7 @@ function metromap(container) {
               }))
               .on("dragend", onlyEdit(function(d) { d.fixed &= 1; }))
               );
+      */
 
     force.start();
     redraw(); // force a redraw, in case we immediately stop

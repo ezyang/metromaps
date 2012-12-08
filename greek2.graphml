@@ -11,19 +11,19 @@
   	<default>0</default>
   </key>
 
-  <key id="l0" for="edge" attr.name="line 0" attr.type="boolean" color.r="0" color.g="255" color.b="0" importance="10">
+  <key id="l0" for="edge" attr.name="line 0" attr.type="boolean" color.r="0" color.g="255" color.b="0" importance="10" title="debt, austerity, credit">
     <default>FALSE</default>
   </key>
 
-  <key id="l1" for="edge" attr.name="line 1" attr.type="boolean" color.r="255" color.g="0" color.b="0" importance="7">
+  <key id="l1" for="edge" attr.name="line 1" attr.type="boolean" color.r="255" color.g="0" color.b="0" importance="7" title="strike, riot, bank">
     <default>FALSE</default>
   </key>
 
-  <key id="l2" for="edge" attr.name="line 2" attr.type="boolean" color.r="0" color.g="0" color.b="255" importance="6">
+  <key id="l2" for="edge" attr.name="line 2" attr.type="boolean" color.r="0" color.g="0" color.b="255" importance="6" title="germany, euro, merkel">
     <default>FALSE</default>
   </key>
 
-  <key id="l3" for="edge" attr.name="line 3" attr.type="boolean" color.r="255" color.g="215" color.b="0" importance="2">
+  <key id="l3" for="edge" attr.name="line 3" attr.type="boolean" color.r="255" color.g="215" color.b="0" importance="2" title="imf, fund, strauss">
     <default>FALSE</default>
   </key>
 
