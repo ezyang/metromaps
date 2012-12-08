@@ -79,9 +79,13 @@ function slideshow(metro) {
               topology = i;
               d3.json(d.data, function(dat) {
                 metro.state(dat).animate(1000).stop();
+                if (topology != 1) {
+                  d3.selectAll(".axis").transition().duration(1000).style("opacity", 0);
+                } else {
+                  d3.selectAll(".axis").transition().duration(1000).style("opacity", 1);
+                }
               });
             }
-            my(controls, altcontrols, panel);
           });
         span.insert("label")
           .attr("for", function(_,i) {return tid + i})

@@ -104,13 +104,16 @@ var NodeType = {
  * Checkout getState() and setState() for more canonical code.
  *
  */
-function metromap(container, width, height) {
+function metromap(container) {
 
   var margin = {top: 0, right: 70, bottom: 20, left: 70};
 
   var dummyid = 0;
 
   var realsvg = container.append("svg");
+
+  var axis = realsvg.append("g").attr("class", "axis");
+
   var svg = realsvg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
   var force = d3.layout.force() // some defaults
@@ -135,8 +138,7 @@ function metromap(container, width, height) {
   var monoscale = d3.scale.linear().domain([0.1,0]).range([0,0]);
   var timescale = d3.scale.linear().domain([0.1,0]).range([0,0]);
 
-  var timelate = d3.time.scale()
-      .range([0, force.size()[0]]);
+  var timelate = d3.time.scale();
 
   function redraw() {
     // XXX use precomputed selection for efficiency (but remember to
@@ -300,6 +302,12 @@ function metromap(container, width, height) {
   function my(updateOnly) {
 
     timelate.domain(d3.extent(force.nodes(), function(d) {return d.date}));
+    axis.transition().call(
+            d3.svg.axis().scale(timelate)
+              .orient("bottom")
+              .ticks(d3.time.months, 1)
+              .tickFormat(d3.time.format('%b %Y'))
+            );
 
     var cdata = svg.selectAll(".circle")
       .data(force.nodes());
@@ -486,9 +494,13 @@ function metromap(container, width, height) {
   // XXX dynamic resizing doesn't really work
   my.size = function(v) {
     if (!arguments.length) return force.size();
+    var width = v[0];
+    var height = v[1];
     realsvg.attr("width", v[0]);
     realsvg.attr("height", v[1]);
+    axis.attr("transform", "translate(" + margin.left + "," + (height - margin.bottom) + ")");
     force.size(v);
+    timelate.range([0, width-margin.left-margin.right]);
     return my;
   }
   my.on = rm(force.on);
