@@ -354,7 +354,9 @@ function metromap(container) {
 
     circle.filter(function(d) {return d.type == NodeType.DUMMY})
       .attr("r", 4)
-      .attr("fill", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
+      .attr("fill", function (d) { return d.fixed & 1 && mode == MetroMode.EDIT ? "#EEE" : "#000" });
+
+    cdata.filter(function(d) {return d.type == NodeType.DUMMY})
       .style("display", mode == MetroMode.EDIT ? "inherit" : "none");
 
     function moveSelector(d) {
