@@ -33,12 +33,15 @@
     <!--<h1>Metro Maps of the News</h1>-->
     <table>
       <tr>
-        <td id="svg-container">
+        <td colspan="2" id="svg-container">
         </td>
       </tr>
+      <tr id="controls">
+          <td id="slideshow-controls"></td>
+          <td id="svg-controls"></td>
+      </tr>
       <tr>
-        <td id="controls">
-          <div id="slideshow-controls"></div>
+        <td colspan="2">
           <div id="slideshow-text"></div>
         </td>
       </tr>
@@ -168,7 +171,7 @@ function clear() {
   initData();
 }
 
-slideshow(metro)(d3.select("#slideshow-controls"), d3.select("#slideshow-text"));
+slideshow(metro)(d3.select("#slideshow-controls"), d3.select("#svg-controls"), d3.select("#slideshow-text"));
 if (window.location.hash == "#debug") {
   var state = localStorage.getItem("state");
   try {

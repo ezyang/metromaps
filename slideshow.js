@@ -3,15 +3,17 @@
 
 function slideshow(metro) {
   var current = 0;
+  var topology = 1;
   var steps = [
     {id: 0, title: "Non-linear narrative", text: "People think of time as a linear progression, but actually, it's more like a wibbly wobbly ball of timey wimey stuff.", img: "sample.png"},
     {id: 1, title: "Step 1", text: "First step.", show: function(x) {return x.id == "n11072"} },
     {id: 2, title: "Step 2", text: "Second step.", show: function(x) {return x.id == "n11496"} },
   ];
   var id = fresh("slideshow");
+  var tid = fresh("topology");
   // CLASSES: page, next, text
   // XXX todo closure-ify me
-  function my(controls, panel) {
+  function my(controls, altcontrols, panel) {
 
     // The direct-jump numbered buttons: [1] [2] [3]
     controls.selectAll(".page")
@@ -58,6 +60,37 @@ function slideshow(metro) {
     if (current != steps.length-1) {
       controls.select(".next").jq().button("enable").removeClass("ui-state-hover");
     }
+
+    altcontrols.selectAll(".topos")
+      .data([{name: "Topological", data: "sample.json"},
+             {name: "Time to scale", data: "preserving.json"}
+             ])
+      .enter()
+      .insert("span")
+      .attr("class", "topos")
+      .call(function(span) {
+        span.insert("input")
+          .attr("type", "radio")
+          .attr("name", "topo")
+          .attr("id", function(_,i) {return tid + i})
+          .attr("value", function(_,i) {return i})
+          .on("change", function(d,i) {
+            if (i != topology) {
+              topology = i;
+              d3.json(d.data, function(dat) {
+                metro.state(dat).animate(1000);
+              });
+            }
+            my(controls, altcontrols, panel);
+          });
+        span.insert("label")
+          .attr("for", function(_,i) {return tid + i})
+          .text(function(d) {return d.name});
+      })
+      ;
+    altcontrols.selectAll("input[type=radio]")
+        .property("checked", function(_,i) {return i == topology});
+    altcontrols.jq().buttonset();
 
     // The title and description of the page
     panel.selectAll(".text")
