@@ -163,18 +163,6 @@ function initData(callback) {
 metro = metromap(d3.select("#svg-container"))
   .size([1000, 600]);
 
-var state = localStorage.getItem("state");
-try {
-  var parsed = JSON.parse(state);
-  if (!parsed) throw "nothing";
-  metro.state(parsed);
-  metro();
-  metro.stop();
-} catch(e) {
-  //throw e; // uncomment me if you want to debug a corrupt savefile
-  if (e == "nothing") clear();
-}
-
 function clear() {
   localStorage.setItem("state", null);
   initData();
@@ -182,10 +170,25 @@ function clear() {
 
 slideshow(metro)(d3.select("#slideshow-controls"), d3.select("#slideshow-text"));
 if (window.location.hash == "#debug") {
+  var state = localStorage.getItem("state");
+  try {
+    var parsed = JSON.parse(state);
+    if (!parsed) throw "nothing";
+    metro.state(parsed);
+    metro();
+    metro.stop();
+  } catch(e) {
+    //throw e; // uncomment me if you want to debug a corrupt savefile
+    if (e == "nothing") clear();
+  }
   debugForce(metro, d3.select("#debug-container"));
 } else {
   d3.select("#debug-container").style("display", "none");
-  metro.mode(MetroMode.VIEW);
+  d3.json("sample.json", function(doc) {
+    metro.state(doc);
+    metro();
+    metro.mode(MetroMode.VIEW);
+  });
 }
     </script>
   </body>
