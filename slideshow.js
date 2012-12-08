@@ -4,9 +4,9 @@
 function slideshow(metro) {
   var current = 0;
   var steps = [
-    {id: 0, title: "Non-linear narrative", text: "People think of time as a linear progression, but actually, it's more like a wibbly wobbly ball of timey wimey stuff."},
-    {id: 1, title: "Step 1", text: "First step.", show: function(x) {return x.id == "n10475"} },
-    {id: 2, title: "Step 2", text: "Second step.", show: function(x) {return x.id == "n10488"} },
+    {id: 0, title: "Non-linear narrative", text: "People think of time as a linear progression, but actually, it's more like a wibbly wobbly ball of timey wimey stuff.", img: "sample.png"},
+    {id: 1, title: "Step 1", text: "First step.", show: function(x) {return x.id == "n11072"} },
+    {id: 2, title: "Step 2", text: "Second step.", show: function(x) {return x.id == "n11496"} },
   ];
   var id = fresh("slideshow");
   // CLASSES: page, next, text
@@ -66,11 +66,16 @@ function slideshow(metro) {
         n.enter()
           .insert("div")
           .attr("class", "text")
-          .call(function(div) {
+          .each(function(d) {
+            var div = d3.select(this);
+            if (d.img) {
+              div.insert("img")
+                .attr("src", d.img);
+            }
             div.insert("h2")
-              .text(function(d) {return d.title});
+              .text(d.title);
             div.insert("p")
-              .text(function(d) {return d.text});
+              .text(d.text);
           });
         n.exit().remove();
       });

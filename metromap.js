@@ -152,7 +152,12 @@ function metromap(container) {
       .attr("d", function(l) { return line(l.nodes); });
 
     svg.selectAll(".metrotext")
-      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")" });
+      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")" })
+      .each(function(d) {
+        d3.select(this).selectAll(".fo")
+          .attr("x", d.textoffset ? d.textoffset[0] : 0)
+          .attr("y", d.textoffset ? d.textoffset[1] : 0);
+      })
 
     // XXX putting this here is pretty expensive, since we need to
     // compute the filter every tick (though fortunately we don't
@@ -434,11 +439,26 @@ function metromap(container) {
       .insert("g")
       .attr("class", "metrotext")
       .filter(function(d) {return d.type != NodeType.DUMMY})
+      .insert("g")
+      .attr("transform", "translate("+(-capWidth/2)+","+(-capHeight-10)+")")
       .insert("foreignObject")
+      .attr("class", "fo") // see http://stackoverflow.com/questions/11742812/cannot-select-svg-foreignobject-element-in-d3
       .attr("width", capWidth)
       .attr("height", capHeight)
-      .attr("x", -capWidth/2)
-      .attr("y", -capHeight-10)
+      .call(d3.behavior.drag()
+              .on("dragstart", onlyEdit(function (d) { d.fixed |= 2; }))
+              .on("drag", onlyEdit(function(d) {
+                var el = d3.select(this);
+                if (!d.textoffset) d.textoffset = [0,0];
+                if (!d3.event.sourceEvent.shiftKey) {
+                  d.textoffset[0] += d3.event.dx;
+                } else {
+                  d.textoffset[1] += d3.event.dy;
+                }
+                redraw();
+              }))
+              .on("dragend", onlyEdit(function(d) { d.fixed &= 1; }))
+              )
       .insert("xhtml:div")
       .style("height", capHeight + "px")
       .style("display", "table-cell")
@@ -544,7 +564,7 @@ function metromap(container) {
   function getState() {
     fnodes = force.nodes().map(function(x) {
       return {
-          id: x.id, label: x.label, date: x.date.toString(), x: x.x, y: x.y, fixed: x.fixed, type: x.type, labelrot: x.labelrot,
+          id: x.id, label: x.label, date: x.date.toString(), x: x.x, y: x.y, fixed: x.fixed, type: x.type, labelrot: x.labelrot, textoffset: x.textoffset,
         edges: x.edges.entries().map(function(kv) {kv.value = kv.value.map(idify); return kv;})
       }
     });
