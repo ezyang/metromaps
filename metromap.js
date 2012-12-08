@@ -10,8 +10,6 @@ var MetroMode = {
 var NodeType = {
     PLAIN: 0,       // plain old node, probably is a plain old intersection or single path node
     DUMMY: 1,       // fake station to allow for bending on a line
-    SUN: 2,         // centered node that is rendered but not connected to any links
-    SATELLITE: 3,   // offset node that is not rendered but connected to links
 }
 
 /**
@@ -357,7 +355,7 @@ function metromap(container) {
     circle.filter(function(d) {return d.type == NodeType.DUMMY})
       .attr("r", 4)
       .attr("fill", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
-      .style("opacity", mode == MetroMode.EDIT ? 1 : 0);
+      .style("display", mode == MetroMode.EDIT ? "inherit" : "none");
 
     function moveSelector(d) {
       var coords = d3.mouse(svg.node());
@@ -600,10 +598,13 @@ function metromap(container) {
   function animate(dur) {
     my(true);
     // XXX code duplication
-    svg.selectAll(".circle").transition().duration(dur)
+    svg.selectAll(".circle")
+      .filter(function(d) {return d.type != NodeType.DUMMY})
+      .transition().duration(dur)
       .attr("stroke", function (d) { return d.fixed & 1 && mode == MetroMode.EDIT ? "#EEE" : "#000" })
       .attr("cx", function(d) { return d.x; })
-      .attr("cy", function(d) { return d.y; });
+      .attr("cy", function(d) { return d.y; })
+      .style("opacity", function(d) { return d.unfocus ? 0 : 1 });
     svg.selectAll(".line").transition().duration(dur)
       .attr("x1", function(d) { return d.source.x; })
       .attr("y1", function(d) { return d.source.y; })
@@ -614,10 +615,12 @@ function metromap(container) {
     // is effort.
     var line = d3.svg.line().x(function(d) {return d.x}).y(function(d) {return d.y});
     svg.selectAll(".metroline").transition().duration(dur)
-      .attr("d", function(l) { return line(l.nodes); });
+      .attr("d", function(l) { return line(l.nodes); })
+      .style("opacity", function(l) {return l.unfocus ? 0.3 : 1});
 
     svg.selectAll(".metrotext").transition().duration(dur)
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")" })
+      .style("opacity", function(d) { return d.unfocus ? 0 : 1 })
       .each(function(d) {
         d3.select(this).selectAll(".fo").transition().duration(dur)
           .attr("x", d.textoffset ? d.textoffset[0] : 0)
@@ -626,6 +629,24 @@ function metromap(container) {
     return my;
   }
   my.animate = animate;
+
+  my.focus = function(focus) {
+    force.nodes().forEach(function(n) {
+      if (focus) {
+        n.unfocus = n.type != NodeType.DUMMY && !n.edges.has(focus);
+      } else {
+        n.unfocus = false;
+      }
+    });
+    lines.forEach(function(l) {
+      if (focus) {
+        l.unfocus = l.id != focus;
+      } else {
+        l.unfocus = false;
+      }
+    });
+    return my;
+  }
 
   my.state = function(v) {
     if (!arguments.length) return getState();

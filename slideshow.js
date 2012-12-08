@@ -83,7 +83,7 @@ function slideshow(metro) {
             if (i != topology) {
               topology = i;
               d3.json(d.data, function(dat) {
-                metro.state(dat).animate(1000).stop();
+                metro.state(dat).focus(d.focus).animate(1000).stop();
                 if (topology == 0) {
                   d3.selectAll(".axis").transition().duration(1000).style("opacity", 0);
                 } else {
