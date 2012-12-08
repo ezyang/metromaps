@@ -104,11 +104,15 @@ var NodeType = {
  * Checkout getState() and setState() for more canonical code.
  *
  */
-function metromap(container) {
+function metromap(container, width, height) {
+
+  var margin = {top: 0, right: 70, bottom: 20, left: 70};
 
   var dummyid = 0;
 
-  var svg = container.append("svg");
+  var realsvg = container.append("svg");
+  var svg = realsvg.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
   var force = d3.layout.force() // some defaults
     .charge(-100)
     .gravity(0.05)
@@ -130,6 +134,9 @@ function metromap(container) {
   var octoscale = d3.scale.linear().domain([0.1,0]).range([0,0]);
   var monoscale = d3.scale.linear().domain([0.1,0]).range([0,0]);
   var timescale = d3.scale.linear().domain([0.1,0]).range([0,0]);
+
+  var timelate = d3.time.scale()
+      .range([0, force.size()[0]]);
 
   function redraw() {
     // XXX use precomputed selection for efficiency (but remember to
@@ -176,7 +183,7 @@ function metromap(container) {
     }
   }
 
-  svg.on("click", onlyView(function() {
+  realsvg.on("click", onlyView(function() {
     captionPredicate = function() {return false;};
     redraw();
   }));
@@ -250,9 +257,6 @@ function metromap(container) {
     });
     var k = timescale(e.alpha);
     // another way of doing it: try to enforce "time boundaries"
-    var timelate = d3.time.scale()
-        .domain(d3.extent(force.nodes(), function(d) {return d.date}))
-        .range([70, force.size()[0]-70]);
     force.nodes().forEach(function(node) {
       if (node.type == NodeType.DUMMY) return;
       var dx = node.x - timelate(node.date);
@@ -294,6 +298,9 @@ function metromap(container) {
   });
 
   function my(updateOnly) {
+
+    timelate.domain(d3.extent(force.nodes(), function(d) {return d.date}));
+
     var cdata = svg.selectAll(".circle")
       .data(force.nodes());
     cdata.exit().remove();
@@ -448,33 +455,6 @@ function metromap(container) {
     textdiv.insert("br");
     textdiv.insert("span").text(function(d) {return d3.time.format("%Y-%m-%d")(d.date)});
 
-    /*
-    svg.selectAll(".metrolabel")
-      .data(force.nodes())
-      .enter()
-      .insert("g")
-      .attr("class", "metrolabel")
-      .filter(function(d) {return d.type != NodeType.DUMMY})
-      .insert("text")
-      .attr("fill", "black")
-      .text(function(d) {return d.shortlabel ? d.shortlabel : d.label.substr(0, 8)})
-      .call(d3.behavior.drag()
-              .on("dragstart", onlyEdit(function (d) { d.fixed |= 2; }))
-              .on("drag", onlyEdit(function(d) {
-                var coord = d3.mouse(svg.node());
-                var dx = coord[0] - d.x;
-                var dy = coord[1] - d.y;
-                d.labelrot = Math.atan2(dy,dx) * 180 / Math.PI;
-                if (d3.event.sourceEvent.shiftKey) { // odd...
-                  // snap to
-                  d.labelrot = Math.round(d.labelrot / 45) * 45
-                }
-                redraw();
-              }))
-              .on("dragend", onlyEdit(function(d) { d.fixed &= 1; }))
-              );
-      */
-
     force.start();
     if (!updateOnly) redraw(); // force a redraw, in case we immediately stop
   }
@@ -503,10 +483,11 @@ function metromap(container) {
   my.friction = rm(force.friction);
   my.linkStrength = rm(force.linkStrength);
   my.linkDistance = rm(force.linkDistance);
+  // XXX dynamic resizing doesn't really work
   my.size = function(v) {
     if (!arguments.length) return force.size();
-    svg.attr("width", v[0]);
-    svg.attr("height", v[1]);
+    realsvg.attr("width", v[0]);
+    realsvg.attr("height", v[1]);
     force.size(v);
     return my;
   }
