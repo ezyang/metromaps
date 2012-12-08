@@ -379,7 +379,8 @@ function metromap(container) {
 
     circle.filter(function(d) {return d.type == NodeType.DUMMY})
       .attr("r", 4)
-      .attr("fill", function (d) { return d.fixed & 1 ? "#EEE" : "#000" });
+      .attr("fill", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
+      .style("opacity", mode == MetroMode.EDIT ? 1 : 0);
 
     function moveSelector(d) {
       var coords = d3.mouse(svg.node());
