@@ -78,7 +78,7 @@ function slideshow(metro) {
             if (i != topology) {
               topology = i;
               d3.json(d.data, function(dat) {
-                metro.state(dat).animate(1000);
+                metro.state(dat).animate(1000).stop();
               });
             }
             my(controls, altcontrols, panel);
