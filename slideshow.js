@@ -28,7 +28,7 @@ function slideshow(metro) {
               .attr("name", "tutorial")
               .attr("id", function(_,i) {return id + i})
               .attr("value", function(_,i) {return i})
-              .on("change", function(_,i) { current = i; my(controls, panel); });
+              .on("change", function(_,i) { current = i; my(controls, altcontrols, panel); });
             span.insert("label")
               .attr("for", function(_,i) {return id + i})
               .text(function(_,i) {return i+1});
@@ -47,7 +47,7 @@ function slideshow(metro) {
           .attr("class", "next")
           .on("click", function(d) {
             current = current + 1;
-            my(controls, panel);
+            my(controls, altcontrols, panel);
           })
           .insert("b").text("Next ▸");
         next.attr("disabled", current == steps.length-1 ? "disabled" : null);
