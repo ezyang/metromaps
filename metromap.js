@@ -144,7 +144,7 @@ function metromap(container) {
     // XXX use precomputed selection for efficiency (but remember to
     // update on changes)
     svg.selectAll(".circle")
-      .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
+      .attr("stroke", function (d) { return (d.fixed & 1) && mode == MetroMode.EDIT ? "#EEE" : "#000" })
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; });
     svg.selectAll(".line")
@@ -350,7 +350,7 @@ function metromap(container) {
 
     circle.filter(function(d) {return d.type != NodeType.DUMMY})
       .attr("r", 8)
-      .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
+      .attr("stroke", function (d) { return (d.fixed & 1) && mode == MetroMode.EDIT ? "#EEE" : "#000" })
       .attr("stroke-width", 3)
       .attr("fill", "#FFF");
 
@@ -601,7 +601,7 @@ function metromap(container) {
     my(true);
     // XXX code duplication
     svg.selectAll(".circle").transition().duration(dur)
-      .attr("stroke", function (d) { return d.fixed & 1 ? "#EEE" : "#000" })
+      .attr("stroke", function (d) { return d.fixed & 1 && mode == MetroMode.EDIT ? "#EEE" : "#000" })
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; });
     svg.selectAll(".line").transition().duration(dur)

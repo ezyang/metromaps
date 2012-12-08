@@ -63,7 +63,12 @@ function slideshow(metro) {
 
     altcontrols.selectAll(".topos")
       .data([{name: "Topological", data: "sample.json"},
-             {name: "Time to scale", data: "preserving.json"}
+             {name: "Time to scale", data: "preserving.json"},
+             // turn this into a real thing later...
+             {name: "L0", data: "preserving.json", focus: "l0"},
+             {name: "L1", data: "l1.json", focus: "l1"},
+             {name: "L2", data: "l2.json", focus: "l2"},
+             {name: "L3", data: "l3.json", focus: "l3"},
              ])
       .enter()
       .insert("span")
@@ -79,7 +84,7 @@ function slideshow(metro) {
               topology = i;
               d3.json(d.data, function(dat) {
                 metro.state(dat).animate(1000).stop();
-                if (topology != 1) {
+                if (topology == 0) {
                   d3.selectAll(".axis").transition().duration(1000).style("opacity", 0);
                 } else {
                   d3.selectAll(".axis").transition().duration(1000).style("opacity", 1);
