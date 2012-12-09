@@ -142,6 +142,7 @@ function metromap(container, debug) {
   // called when my.show() is invoked; useful because clicks can result in
   // show invocations
   var showcallback = function() {};
+  var directions = octilinear;
 
   var color             = d3.scale.category10(),
       mode              = MetroMode.EDIT,
@@ -304,7 +305,7 @@ function metromap(container, debug) {
       // XXX how to stop overlapping?  nudging the edge too far is
       // not stable...
       // XXX this should respect friction
-      var dir = maxr(octilinear, function(x) {return dot(x,v)});
+      var dir = maxr(directions, function(x) {return dot(x,v)});
       // XXX refactor me, extra lines for handling 'fixed' nodes
       if (link.source.fixed & 1) {
         var center = vec(link.source);
@@ -683,6 +684,12 @@ function metromap(container, debug) {
   my.state = function(v) {
     if (!arguments.length) return getState();
     setState(v);
+    return my;
+  }
+
+  my.directions = function(v) {
+    if (!arguments.length) return directions;
+    directions = v;
     return my;
   }
 
