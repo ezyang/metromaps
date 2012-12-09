@@ -17,16 +17,16 @@
     <script src="debug.js"></script>
     <style>
       body {font-family:'Times New Roman'}
-      #controls {vertical-align:top; width:17em;}
       #debug-container {margin:0 1em;}
-      #controls td {padding: 0 0.5em 0 0;}
       #debug-container td {padding: 0 0.5em;}
       #fulltext {min-width:600px;padding-left:2em;vertical-align:top;}
-      #svg-controls {text-align:right;}
       #svg-container {height:600px}
       .ui-button {font-size:0.7em; }
-      #controls {height:1em}
-      #controls .ui-button span {padding:.2em .5em}
+      .controls {height:1em}
+      .controls td {padding: 0 0.5em 0 0;}
+      .controls .ui-button span {padding:.2em .5em}
+      #line-controls {text-align:right;}
+      #slideshow-controls {padding-top: .5em;}
       /* See jQuery UI bug http://bugs.jqueryui.com/ticket/8827 */
       .ui-buttonset .ui-button {margin:0; margin-right:-1px;}
       .ui-state-hover, .ui-state-active {z-index:1;}
@@ -35,6 +35,12 @@
       .image {float: right; width:200px;margin-left:2em;}
       .image h6 {margin:0;color:#999; }
       .image .caption {font-size:12px;}
+      #svg_none {display:none;}
+      #svg_legend {width:20px;height:12px;}
+      #color_blue {stroke: #1f77b4; stroke-width: 7px; fill: none;}
+      #color_orange {stroke: #ff7f0e; stroke-width: 7px; fill: none;}
+      #color_green {stroke: #2ca02c; stroke-width: 7px; fill: none;}
+      #color_red {stroke: #d62728; stroke-width: 7px; fill: none;}
 .axis path,
 .axis line {
     fill: none;
@@ -55,13 +61,15 @@
       <tr>
         <td colspan="3" id="svg-container">
         </td>
-        <td rowspan="3" id="fulltext">
+        <td rowspan="4" id="fulltext">
         </td>
       </tr>
-      <tr id="controls">
-          <td id="slideshow-controls"></td>
+      <tr class="controls">
           <td id="time-controls"></td>
           <td id="line-controls"></td>
+      </tr>
+      <tr class="controls">
+          <td id="slideshow-controls"></td>
       </tr>
       <tr>
         <td colspan="2" style="vertical-align:top">

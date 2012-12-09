@@ -53,7 +53,7 @@ function slideshow(metro) {
               .attr("name", "tutorial")
               .attr("id", function(_,i) {return id + i})
               .attr("value", function(_,i) {return i})
-              .on("change", function(_,i) { current = i; my(controls, timecontrols, legendcontrols, panel); });
+              .on("change", function(_,i) { current = i; my(controls, timecontrols, linecontrols, panel); });
             span.insert("label")
               .attr("for", function(_,i) {return id + i})
               .text(function(_,i) {return i+1});
@@ -72,7 +72,7 @@ function slideshow(metro) {
           .attr("class", "next")
           .on("click", function(d) {
             current = current + 1;
-            my(controls, timecontrols, legendcontrols, panel);
+            my(controls, timecontrols, linecontrols, panel);
           })
           .insert("b").text("Next ▸");
         next.attr("disabled", current == steps.length-1 ? "disabled" : null);
@@ -118,11 +118,11 @@ function slideshow(metro) {
     //legend and highlighting for different lines
     linecontrols.selectAll(".lines")
       .data([// turn this into a real thing later...
-             {name: "None"},
-             {name: "L0", data: "preserving.json", focus: "l0"},
-             {name: "L1", data: "l1.json", focus: "l1"},
-             {name: "L2", data: "l2.json", focus: "l2"},
-             {name: "L3", data: "l3.json", focus: "l3"},
+             {name: "no highlight", svg_id: "svg_none"},
+             {name: "debt, austerity, credit", data: "preserving.json", focus: "l0", svg_id: "svg_legend", color_id: "color_blue"},
+             {name: "strike, riot, bank", data: "l1.json", focus: "l1", svg_id: "svg_legend", color_id: "color_orange"},
+             {name: "germany, euro, merkel", data: "l2.json", focus: "l2", svg_id: "svg_legend", color_id: "color_green"},
+             {name: "imf, fund, strauss", data: "l3.json", focus: "l3", svg_id: "svg_legend", color_id: "color_red"},
              ])
       .enter()
       .insert("span")
@@ -142,7 +142,15 @@ function slideshow(metro) {
           });
         span.insert("label")
           .attr("for", function(_,i) {return lid + i})
-          .text(function(d) {return d.name});
+          .text(function(d) {return d.name})
+            .insert("svg")
+            .attr("id",function(d,_) {return d.svg_id;})
+              .insert("line")
+              .attr("id",function(d,_) {return d.color_id;})
+              .attr("x1","5")
+              .attr("y1","7")
+              .attr("x2","20")
+              .attr("y2","7");
       })
       ;
     linecontrols.selectAll("input[type=radio]")
