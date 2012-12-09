@@ -687,6 +687,7 @@ function metromap(container, debug) {
     return my;
   }
 
+  // needs unit vectors
   my.directions = function(v) {
     if (!arguments.length) return directions;
     directions = v;
