@@ -12,7 +12,7 @@ function slideshow(metro) {
   var id = fresh("slideshow");
   var tid = fresh("topology");
   metro.showcallback(function(d) {
-    d3.html("fulltext/" + d.id.substr(1), function(doc) {
+    d3.html("fulltext/" + d.id.substr(1) + ".html", function(doc) {
       $("#fulltext").empty().append(doc);
     });
   });
