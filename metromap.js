@@ -100,68 +100,84 @@ function metromap(container, debug) {
 
   var margin = {top: 0, right: 70, bottom: 20, left: 70};
 
+  // We need to generate fresh IDs for dummy nodes we create;
+  // furthermore, this information must be persisted across
+  // getState/setState, since more dummy nodes may be created later.
   var dummyid = 0;
 
-  var realsvg = container.append("svg");
+  var realsvg = container.append("svg"),
+      axis = realsvg.append("g").attr("class", "axis"),
+      svg = realsvg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  var axis = realsvg.append("g").attr("class", "axis");
-
-  var svg = realsvg.append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-  var force = d3.layout.force() // some defaults
+  var force = d3.layout.force() // some defaults (they're not very good ;-)
     .charge(-100)
     .gravity(0.05)
     .linkStrength(1)
     .linkDistance(80);
-  d3_layout_force_pausable(force);
+  d3_layout_force_pausable(force); // see pforce.js
 
-  var capWidth = 130;
-  var capHeight = 64;
+  // width and height of the text labels; it's OK if they're a little
+  // higher than necessary but that can interfere with click hitboxes
+  var capWidth = 130,
+      capHeight = 64;
+
+  // called when my.show() is invoked; useful because clicks can result in
+  // show invocations
   var showcallback = function() {};
 
   var color             = d3.scale.category10(),
-      dur               = 500,
       mode              = MetroMode.EDIT,
       lines             = [];
 
-  // the ranges of this scale is controlled by 'octoforce', 'monoforce'
+  // the ranges of these scales are controlled by 'octoforce', 'monoforce'
   // and 'timeforce'
   var octoscale = d3.scale.linear().domain([0.1,0]).range([0,0]);
   var monoscale = d3.scale.linear().domain([0.1,0]).range([0,0]);
   var timescale = d3.scale.linear().domain([0.1,0]).range([0,0]);
 
+  // scale for mapping times to x coordinate positions
   var timelate = d3.time.scale();
 
-  function redraw() {
+  function redraw(dur) {
+    if (arguments.length < 1) dur = 0;
     // XXX use precomputed selection for efficiency (but remember to
     // update on changes)
     svg.selectAll(".circle")
+      .transition().duration(dur)
       .attr("stroke", function (d) { return (d.fixed & 1) && mode == MetroMode.EDIT ? "#EEE" : "#000" })
       .attr("fill", function (d) { return d.selected ? "black" : "white" })
       .attr("r", function (d) { return d.selected ? 16 : d.type != NodeType.DUMMY ? 8 : 4 })
       .attr("cx", function(d) { return d.x; })
-      .attr("cy", function(d) { return d.y; });
+      .attr("cy", function(d) { return d.y; })
+      .style("opacity", function(d) { return d.unfocus ? 0 : 1 });
     svg.selectAll(".line")
+      .transition().duration(dur)
       .attr("x1", function(d) { return d.source.x; })
       .attr("y1", function(d) { return d.source.y; })
       .attr("x2", function(d) { return d.target.x; })
       .attr("y2", function(d) { return d.target.y; });
+    // XXX This doesn't work right if the polyline point mapping has
+    // changed (dummy nodes were added or removed).  Doing this properly
+    // is effort.
     var line = d3.svg.line().x(function(d) {return d.x}).y(function(d) {return d.y});
     svg.selectAll(".metroline")
-      .attr("d", function(l) { return line(l.nodes); });
+      .transition().duration(dur)
+      .attr("d", function(l) { return line(l.nodes); })
+      .style("opacity", function(l) {return l.unfocus ? 0.3 : 1});
 
     svg.selectAll(".metrotext")
+      .transition().duration(dur)
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")" })
+      .style("opacity", function(d) { return d.unfocus ? 0 : 1 })
       .each(function(d) {
-        var fo = d3.select(this).selectAll(".fo")
+        var fo = d3.select(this).selectAll(".fo").transition().duration(dur)
           .attr("x", d.textoffset ? d.textoffset[0] : 0)
           .attr("y", d.textoffset ? d.textoffset[1] : 0);
-        fo.selectAll(".thediv")
+        fo.selectAll(".thediv").transition().duration(dur)
           .style("background", d.selected ? "black" : "inherit")
           .style("color", d.selected ? "white" : "inherit");
-        fo.selectAll(".thespan")
+        fo.selectAll(".thespan").transition().duration(dur)
           .style("background", d.selected ? "inherit" : "rgba(255,255,255,0.7)");
-          // would be nice if we could get rid of spacing, ALAS!
       })
   }
 
@@ -525,7 +541,7 @@ function metromap(container, debug) {
   my.mode = function(v) {
     if (!arguments.length) return mode;
     mode = v;
-    var dummyNodeTransition = svg.selectAll(".circle").filter(function(d) {return d.type == NodeType.DUMMY}).transition().duration(dur);
+    var dummyNodeTransition = svg.selectAll(".circle").filter(function(d) {return d.type == NodeType.DUMMY}).transition().duration(500);
     if (mode == MetroMode.VIEW) {
       dummyNodeTransition.style("opacity", 0);
       oldPaused = my.paused();
@@ -631,42 +647,7 @@ function metromap(container, debug) {
 
   function animate(dur) {
     my(true);
-    // XXX code duplication
-    svg.selectAll(".circle")
-      .filter(function(d) {return d.type != NodeType.DUMMY})
-      .transition().duration(dur)
-      .attr("stroke", function (d) { return d.fixed & 1 && mode == MetroMode.EDIT ? "#EEE" : "#000" })
-      .attr("fill", function (d) { return d.selected ? "black" : "white" })
-      .attr("r", function (d) { return d.selected ? 16 : d.type != NodeType.DUMMY ? 8 : 4 })
-      .attr("cx", function(d) { return d.x; })
-      .attr("cy", function(d) { return d.y; })
-      .style("opacity", function(d) { return d.unfocus ? 0 : 1 });
-    svg.selectAll(".line").transition().duration(dur)
-      .attr("x1", function(d) { return d.source.x; })
-      .attr("y1", function(d) { return d.source.y; })
-      .attr("x2", function(d) { return d.target.x; })
-      .attr("y2", function(d) { return d.target.y; });
-    // XXX This doesn't work right if the polyline point mapping has
-    // changed (dummy nodes were added or removed).  Doing this properly
-    // is effort.
-    var line = d3.svg.line().x(function(d) {return d.x}).y(function(d) {return d.y});
-    svg.selectAll(".metroline").transition().duration(dur)
-      .attr("d", function(l) { return line(l.nodes); })
-      .style("opacity", function(l) {return l.unfocus ? 0.3 : 1});
-
-    svg.selectAll(".metrotext").transition().duration(dur)
-      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")" })
-      .style("opacity", function(d) { return d.unfocus ? 0 : 1 })
-      .each(function(d) {
-        var fo = d3.select(this).selectAll(".fo").transition().duration(dur)
-          .attr("x", d.textoffset ? d.textoffset[0] : 0)
-          .attr("y", d.textoffset ? d.textoffset[1] : 0);
-        fo.selectAll(".thediv").transition().duration(dur)
-          .style("background", d.selected ? "black" : "inherit")
-          .style("color", d.selected ? "white" : "inherit");
-        fo.selectAll(".thespan").transition().duration(dur)
-          .style("background", d.selected ? "inherit" : "rgba(255,255,255,0.7)");
-      })
+    redraw(dur);
     return my;
   }
   my.animate = animate;
