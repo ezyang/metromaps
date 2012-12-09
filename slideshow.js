@@ -59,7 +59,6 @@ function slideshow(metro) {
     });
   }
   // CLASSES: page, next, text
-  // XXX todo closure-ify me
   function my(controls, timecontrols, linecontrols, panel) {
     function redraw() {
       my(controls, timecontrols, linecontrols, panel);
@@ -209,11 +208,9 @@ function slideshow(metro) {
         });
     linecontrols.jq().buttonset();
 
-    //metro.captionPredicate(steps[current].show || function() {return false;});    
     //mostly fixed bug by preserving selected state.  but, now sometimes has black text on black background, not very repeatable though.
     show_data();
     metro.show(steps[current].show || false);
-    if (typeof steps[current].show === 'undefined') showcallback(); //empties fulltext if there is no show
   }
   my.current = function(v) {
     if (!arguments.length) return current;

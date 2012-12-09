@@ -218,7 +218,9 @@ if (debug) {
     metro.stop();
   } catch(e) {
     //throw e; // uncomment me if you want to debug a corrupt savefile
-    if (e == "nothing") clear();
+    if (e == "nothing") {
+      clear();
+    }
   }
   debugForce(metro, d3.select("#debug-container"));
 } else {

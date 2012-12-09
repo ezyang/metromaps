@@ -36,6 +36,10 @@ var NodeType = {
  *
  *        metro.octoforce([0,1])
  *
+ * monoforce
+ * timeforce
+ *    Similar to octoforce.
+ *
  * paused
  *    Pauses the visualization.  When the visualization is paused, all
  *    calls to things that would resume graph layout are silently
@@ -46,6 +50,20 @@ var NodeType = {
  *    A JSON-representable serialization of the entire state of the
  *    force layout; enough information to reconstruct the layout of
  *    the graph.  This includes force layout parameters.
+ *
+ * focus
+ *    Focus on a specific line ID, or if called with 'false' brings all
+ *    lines into focus.
+ *
+ * show
+ *    Focus on a specific stop ID, or if called with 'false' unfocuses
+ *    all stops.
+ *    XXX Doesn't say what the current focused stop is...
+ *
+ * showcallback
+ *    Callback that is invoked when "show" is called.  Can be generated
+ *    by events on the diagram and not just explicit calls.
+ *    XXX really ought to be an "on" handler
  *
  * These accessors directly correspond to their force layout
  * counterparts (though their behavior may be slightly modified):
@@ -310,7 +328,7 @@ function metromap(container, debug) {
     redraw();
   });
 
-  function my(updateOnly) {
+  function my(dur) {
 
     timelate.domain(d3.extent(force.nodes(), function(d) {return d.date}));
     axis.transition().call(
@@ -485,7 +503,7 @@ function metromap(container, debug) {
     textdiv.insert("span").text(function(d) {return d3.time.format("%Y-%m-%d")(d.date)});
 
     force.start();
-    if (!updateOnly) redraw(); // force a redraw, in case we immediately stop
+    redraw(dur ? dur : 0); // force a redraw, in case we immediately stop
   }
 
   realsvg.on("click", onlyView(function() {
@@ -541,13 +559,10 @@ function metromap(container, debug) {
   my.mode = function(v) {
     if (!arguments.length) return mode;
     mode = v;
-    var dummyNodeTransition = svg.selectAll(".circle").filter(function(d) {return d.type == NodeType.DUMMY}).transition().duration(500);
     if (mode == MetroMode.VIEW) {
-      dummyNodeTransition.style("opacity", 0);
       oldPaused = my.paused();
       my.paused(true);
     } else {
-      dummyNodeTransition.style("opacity", 1);
       my.paused(oldPaused);
     }
     return my;
@@ -556,6 +571,7 @@ function metromap(container, debug) {
     force.nodes().forEach(function(n) {
       if (v && n.type != NodeType.DUMMY && n.id == v) {
         if (n.selected) {
+          // re-click should hide it
           showcallback();
           n.selected = false;
         } else {
@@ -602,6 +618,8 @@ function metromap(container, debug) {
     var linkmap = d3.map();
     st.nodes.forEach(function(v) {
       v.date = new Date(v.date); 
+      // ezyang: I think this is probably wrong...
+      // we should probably store this state not in the nodes
       force.nodes().forEach(function(old_n) {
         v.selected = v.selected || (old_n.selected && old_n.id == v.id);
       });
@@ -645,27 +663,19 @@ function metromap(container, debug) {
       .mode(st.mode);
   }
 
-  function animate(dur) {
-    my(true);
-    redraw(dur);
+  // XXX get rid of me
+  my.animate = function(dur) {
+    my(dur);
     return my;
   }
-  my.animate = animate;
 
   my.focus = function(focus) {
+    // inverted so that absence == in focus
     force.nodes().forEach(function(n) {
-      if (focus) {
-        n.unfocus = n.type != NodeType.DUMMY && !n.edges.has(focus);
-      } else {
-        n.unfocus = false;
-      }
+      n.unfocus = focus && n.type != NodeType.DUMMY && !n.edges.has(focus);
     });
     lines.forEach(function(l) {
-      if (focus) {
-        l.unfocus = l.id != focus;
-      } else {
-        l.unfocus = false;
-      }
+      l.unfocus = focus && l.id != focus;
     });
     return my;
   }
