@@ -87,7 +87,7 @@ function slideshow(metro) {
               .attr("name", "tutorial")
               .attr("id", function(_,i) {return id + i})
               .attr("value", function(_,i) {return i})
-              .on("change", function(_,i) { current = i; redraw(); });
+              .on("change", function(d,i) { current = i; redraw(); });
             span.insert("label")
               .attr("for", function(_,i) {return id + i})
               .text(function(_,i) {return i+1});
@@ -194,6 +194,7 @@ function slideshow(metro) {
     linecontrols.jq().buttonsetv();
 
     //mostly fixed bug by preserving selected state.  but, now sometimes has black text on black background, not very repeatable though.
+    focus = steps[current].line;
     show_data();
     metro.show(steps[current].show || false);
   }
