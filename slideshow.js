@@ -53,6 +53,7 @@ function slideshow(metro) {
     function redraw() {
       my(controls, timecontrols, linecontrols, panel);
     }
+    focus = steps[current].line;
     // The title and description of the page
     panel.selectAll(".text")
       .data([steps[current]], function(d) {return d.id})
@@ -194,7 +195,6 @@ function slideshow(metro) {
     linecontrols.jq().buttonsetv();
 
     //mostly fixed bug by preserving selected state.  but, now sometimes has black text on black background, not very repeatable though.
-    focus = steps[current].line;
     show_data();
     metro.show(steps[current].show || false);
   }
