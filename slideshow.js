@@ -2,6 +2,7 @@
 // XXX is gonna need to know about the force layout
 
 function slideshow(metro) {
+  var first = true;
   var current = 0;
   var timeology = 1;
   var focus;
@@ -41,11 +42,7 @@ function slideshow(metro) {
   function show_data() {
     d3.json(json_datas(timeology,focus), function(dat) {
       metro.state(dat).focus(focus).animate(1000).stop();
-      if (timeology == 0) {
-        d3.selectAll(".axis").transition().duration(1000).style("opacity", 0);
-      } else {
-        d3.selectAll(".axis").transition().duration(1000).style("opacity", 1);
-      }
+      d3.selectAll(".axis").transition().duration(1000).style("opacity", timeology == 0 ? 0 : 1);
     });
   }
   // CLASSES: page, next, text
@@ -194,9 +191,17 @@ function slideshow(metro) {
         });
     linecontrols.jq().buttonsetv();
 
-    //mostly fixed bug by preserving selected state.  but, now sometimes has black text on black background, not very repeatable though.
-    show_data();
-    metro.show(steps[current].show || false);
+    if (!first) {
+      // mostly fixed bug by preserving selected state.  but, now
+      // sometimes has black text on black background, not very
+      // repeatable though.
+      // ezyang: These two functions should not be run the first
+      // time we render, esp for debug mode XXX HACK
+      show_data();
+      metro.show(steps[current].show || false);
+    } else {
+      first = false;
+    }
   }
   my.current = function(v) {
     if (!arguments.length) return current;
