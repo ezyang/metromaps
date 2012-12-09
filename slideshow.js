@@ -5,7 +5,7 @@ function slideshow(metro) {
   var current = 0;
   var timeology = 1;
   var line = 0;
-  var focus = "";
+  var focus;
   var steps = [
     {id: 0, title: "Non-linear narrative", text: "People think of time as a linear progression, but actually, it's more like a wibbly wobbly ball of timey wimey stuff.", img: "sample.png"},
     {id: 1, title: "Step 1", text: "First step.", show: "n11072" },
@@ -13,9 +13,12 @@ function slideshow(metro) {
   ];
   var id = fresh("slideshow");
   metro.showcallback(function(d) {
-    d3.html("fulltext/" + d.id.substr(1) + ".html", function(doc) {
-      $("#fulltext").empty().append(doc);
-    });
+    $("#fulltext").empty();
+    if (d) {
+      d3.html("fulltext/" + d.id.substr(1) + ".html", function(doc) {
+        $("#fulltext").append(doc);
+      });
+    }
   });
   var tid = fresh("timeology");
   var lid = fresh("line");
@@ -119,10 +122,10 @@ function slideshow(metro) {
     linecontrols.selectAll(".lines")
       .data([// turn this into a real thing later...
              {name: "no highlight", svg_id: "svg_none"},
-             {name: "debt, austerity, credit", data: "preserving.json", focus: "l0", svg_id: "svg_legend", color_id: "color_blue"},
-             {name: "strike, riot, bank", data: "l1.json", focus: "l1", svg_id: "svg_legend", color_id: "color_orange"},
-             {name: "germany, euro, merkel", data: "l2.json", focus: "l2", svg_id: "svg_legend", color_id: "color_green"},
-             {name: "imf, fund, strauss", data: "l3.json", focus: "l3", svg_id: "svg_legend", color_id: "color_red"},
+             {name: "debt, austerity, credit", focus: "l0", svg_id: "svg_legend", color_id: "color_blue"},
+             {name: "strike, riot, bank", focus: "l1", svg_id: "svg_legend", color_id: "color_orange"},
+             {name: "germany, euro, merkel", focus: "l2", svg_id: "svg_legend", color_id: "color_green"},
+             {name: "imf, fund, strauss", focus: "l3", svg_id: "svg_legend", color_id: "color_red"},
              ])
       .enter()
       .insert("span")

@@ -185,11 +185,6 @@ function metromap(container, debug) {
     }
   }
 
-  realsvg.on("click", onlyView(function() {
-    force.nodes().forEach(function(d) { d.selected = false; });
-    redraw();
-  }));
-
   var dummySelector = svg.insert("circle")
     .attr("class", "dummySelector")
     .attr("r", 4)
@@ -477,6 +472,12 @@ function metromap(container, debug) {
     if (!updateOnly) redraw(); // force a redraw, in case we immediately stop
   }
 
+  realsvg.on("click", onlyView(function() {
+    force.nodes().forEach(function(d) { d.selected = false; });
+    my.showcallback()();
+    redraw();
+  }));
+
   // apply the accessor function, but in the case of
   // chaining return our closure, not the original
   function rm(f) {
@@ -537,10 +538,13 @@ function metromap(container, debug) {
   }
   my.show = function(v) {
     force.nodes().forEach(function(n) {
-      if (v) {
-        n.selected = n.type != NodeType.DUMMY && n.id == v;
+      if (v && n.type != NodeType.DUMMY && n.id == v) {
         if (n.selected) {
-          showcallback(n);
+          showcallback();
+          n.selected = false;
+        } else {
+          showcallback(n)
+          n.selected = true;
         }
       } else {
         n.selected = false;
