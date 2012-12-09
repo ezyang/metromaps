@@ -8,22 +8,12 @@ function slideshow(metro) {
   var focus;
   var steps = [
     {id: 0, title: "Visualizing the News through Metromaps", line:0, text: "Our project, Visualizing the News through Metromaps, helps users unfamiliar with a set of news stories better grasp and comprehend the threads between different storylines in the news. In this example, we have a collection of news stories related to the Greek debt crisis, and Dafna's algorithm has generated the significant threads among the stories.", img: "sample.png"},
-    {id: 1, title: "Thread 1: debt, austerity, credit", line:1, text: "The first main thread encompasses the keywords \"debt, austery, credit\", and highlights news stories talking directly about Greek debt."},
-    {id: 2, title: "Thread 1: debt, austerity, credit", line:1, show: "n9572", text: "It starts in 2009, when Greek's debt is about to grow to the point where drastic measures will need to be taken."},
-    {id: 3, title: "Thread 1: debt, austerity, credit", line:1, show: "n11072", text: "Eventually there are plans made to cut the deficit."},
-    {id: 4, title: "Thread 1: debt, austerity, credit", line:1, show: "n13518", text: "At the end, many Greeks realize that there are major problems in Greece that caused the debt crisis."},
-    {id: 5, title: "Thread 2: stike, riot, bank", line:0, text: "But, that is not the only major thread of news occuring during this time related to the crisis."},
-    {id: 6, title: "Thread 2: stike, riot, bank", line:1, show: "n11072", text: "After certain measures were put into place to try to deal with the problems..."},
-    {id: 7, title: "Thread 2: stike, riot, bank", line:2, show: "n11324", text: "...they sparked protests and strikes that gradually spread throughout the country."},
-    {id: 8, title: "Thread 2: stike, riot, bank", line:2, show: "n12139", text: "These protests grew and caused great havoc in the daily lives of most Greeks, "},
-    {id: 9, title: "Thread 2: stike, riot, bank", line:2, show: "n13913", text: " but eventually quieted down later. "},
-    {id: 10, title: "Thread 3: germany, euro, merkel", line:3, show: "n9908", text: "At the same time, there were the institutions trying to deal with the crisis, most prominently Germany."},
-    {id: 11, title: "Thread 3: germany, euro, merkel", line:3, show: "n11496", text: "We can see where this thread intersected with Greek debt, like when the EU nations tried to set deadlines on Greece."},
-    {id: 12, title: "Thread 3: germany, euro, merkel", line:3, show: "n12390", text: "At one point, Germany tried to get the IMF to help Greece out,"},
-    {id: 13, title: "Thread 4: imf, fund, strauss", line:4, show: "n12482", text: "and indeed a thread of news stories detailed how much the IMF were able to help the Greek situation."},
-    {id: 14, title: "Greek Debt Crisis Metromap", line:0, text: "There were many ongoing and synchronous different threads throughout the crisis, and our visualization is able to capture this data from Dafna's algorithm and lay it out in a very clean and comprehendable format."},
-    {id: 15, title: "Greek Debt Crisis Metromap", line:1, text: "The visualization highlights for the reader so that he can identify salient threads that have some common player, "},
-    {id: 16, title: "Greek Debt Crisis Metromap", line:0, show: "n11496", text: "as well as specific news stories that cover overlapping threads."},
+    {id: 1, title: "Thread 1: debt, austerity, credit", line:1, show: "n9572", text: "The first main thread encompasses the keywords \"debt, austery, credit\", and highlights news stories talking directly about Greek debt.  It starts in 2009, when Greek's debt is about to grow to the point where drastic measures will need to be taken."},
+    {id: 2, title: "Thread 1: debt, austerity, credit", line:1, show: "n13518", text: "At the end, many Greeks realize that there are major problems in Greece that caused the debt crisis."},
+    {id: 3, title: "Thread 2: stike, riot, bank", line:1, show: "n11072", text: "At the same time, due to certain measures were put into place to try to deal with the problems..."},
+    {id: 4, title: "Thread 2: stike, riot, bank", line:2, show: "n11324", text: "...they sparked protests and strikes that gradually spread throughout the country."},
+    {id: 5, title: "Thread 2: stike, riot, bank", line:2, show: "n13913", text: "These protests grew and caused great havoc in the daily lives of most Greeks, but eventually quieted down later. "},
+    {id: 6, title: "Greek Debt Crisis Metromap", line:0, text: "There were many ongoing and synchronous different threads throughout the crisis, and our visualization is able to capture this data from Dafna's algorithm and lay it out in a very clean and comprehendable format. The visualization highlights for the reader so that he can identify salient threads that have some common player, as well as specific news stories that cover overlapping threads."},
   ];
 
   var id = fresh("slideshow");
