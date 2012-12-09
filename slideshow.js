@@ -11,6 +11,9 @@ function slideshow(metro) {
   ];
   var id = fresh("slideshow");
   var tid = fresh("topology");
+  metro.showcallback(function(d) {
+    console.log(d);
+  });
   // CLASSES: page, next, text
   // XXX todo closure-ify me
   function my(controls, altcontrols, panel) {

@@ -117,6 +117,7 @@ function metromap(container, debug) {
 
   var capWidth = 130;
   var capHeight = 64;
+  var showcallback = function() {};
 
   var color             = d3.scale.category10(),
       dur               = 500,
@@ -319,7 +320,7 @@ function metromap(container, debug) {
       .call(debug ? mydrag : function() {})
       // XXX make this hitbox larger
       .on("click", viewEdit(function(d) {
-        force.nodes().forEach(function(d2) { d.selected = d2.id == d.id; });
+        my.show(d.id);
         d3.event.stopPropagation();
         redraw();
       }, function(d) {
@@ -432,7 +433,7 @@ function metromap(container, debug) {
       .attr("transform", "translate("+(-capWidth/2)+","+(-capHeight-10)+")")
       .insert("foreignObject")
       .on("click", onlyView(function(d) {
-        force.nodes().forEach(function(d2) { d2.selected = d2.id == d.id; });
+        my.show(d.id);
         d3.event.stopPropagation();
         redraw();
       }))
@@ -539,13 +540,18 @@ function metromap(container, debug) {
       if (v) {
         n.selected = n.type != NodeType.DUMMY && n.id == v;
         if (n.selected) {
-          // hit a callback
+          showcallback(n);
         }
       } else {
         n.selected = false;
       }
     });
     redraw();
+  }
+  my.showcallback = function(v) {
+    if (!arguments.length) return showcallback;
+    showcallback = v;
+    return my;
   }
 
   // essentially, these are copies of nodes/links/lines but with object
