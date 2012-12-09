@@ -4,16 +4,15 @@
 function slideshow(metro) {
   var current = 0;
   var timeology = 1;
-  var line = 0;
   var focus;
   var steps = [
-    {id: 0, title: "Visualizing the News through Metromaps", line:0, text: "Our project, Visualizing the News through Metromaps, helps users unfamiliar with a set of news stories better grasp and comprehend the threads between different storylines in the news. In this example, we have a collection of news stories related to the Greek debt crisis, and Dafna's algorithm has generated the significant threads among the stories.", img: "sample.png"},
-    {id: 1, title: "Thread 1: debt, austerity, credit", line:1, show: "n9572", text: "The first main thread encompasses the keywords \"debt, austery, credit\", and highlights news stories talking directly about Greek debt.  It starts in 2009, when Greek's debt is about to grow to the point where drastic measures will need to be taken."},
-    {id: 2, title: "Thread 1: debt, austerity, credit", line:1, show: "n13518", text: "At the end, many Greeks realize that there are major problems in Greece that caused the debt crisis."},
-    {id: 3, title: "Thread 2: stike, riot, bank", line:1, show: "n11072", text: "At the same time, due to certain measures were put into place to try to deal with the problems..."},
-    {id: 4, title: "Thread 2: stike, riot, bank", line:2, show: "n11324", text: "...they sparked protests and strikes that gradually spread throughout the country."},
-    {id: 5, title: "Thread 2: stike, riot, bank", line:2, show: "n13913", text: "These protests grew and caused great havoc in the daily lives of most Greeks, but eventually quieted down later. "},
-    {id: 6, title: "Greek Debt Crisis Metromap", line:0, text: "There were many ongoing and synchronous different threads throughout the crisis, and our visualization is able to capture this data from Dafna's algorithm and lay it out in a very clean and comprehendable format. The visualization highlights for the reader so that he can identify salient threads that have some common player, as well as specific news stories that cover overlapping threads."},
+    {id: 0, title: "Visualizing the News through Metromaps", text: "Our project, Visualizing the News through Metromaps, helps users unfamiliar with a set of news stories better grasp and comprehend the threads between different storylines in the news. In this example, we have a collection of news stories related to the Greek debt crisis, and Dafna's algorithm has generated the significant threads among the stories.", img: "sample.png"},
+    {id: 1, title: "Thread 1: debt, austerity, credit", line:"l0", show: "n9572", text: "The first main thread encompasses the keywords \"debt, austery, credit\", and highlights news stories talking directly about Greek debt.  It starts in 2009, when Greek's debt is about to grow to the point where drastic measures will need to be taken."},
+    {id: 2, title: "Thread 1: debt, austerity, credit", line:"l0", show: "n13518", text: "At the end, many Greeks realize that there are major problems in Greece that caused the debt crisis."},
+    {id: 3, title: "Thread 2: stike, riot, bank", line:"l0", show: "n11072", text: "At the same time, due to certain measures were put into place to try to deal with the problems..."},
+    {id: 4, title: "Thread 2: stike, riot, bank", line:"l1", show: "n11324", text: "...they sparked protests and strikes that gradually spread throughout the country."},
+    {id: 5, title: "Thread 2: stike, riot, bank", line:"l1", show: "n13913", text: "These protests grew and caused great havoc in the daily lives of most Greeks, but eventually quieted down later. "},
+    {id: 6, title: "Greek Debt Crisis Metromap", text: "There were many ongoing and synchronous different threads throughout the crisis, and our visualization is able to capture this data from Dafna's algorithm and lay it out in a very clean and comprehendable format. The visualization highlights for the reader so that he can identify salient threads that have some common player, as well as specific news stories that cover overlapping threads."},
   ];
 
   var id = fresh("slideshow");
@@ -32,14 +31,15 @@ function slideshow(metro) {
   var tid = fresh("timeology");
   var lid = fresh("line");
   function json_datas(t, l) {
-    var datas = [
-      ["sample.json"],
-      ["preserving.json", "preserving.json", "l1.json", "l2.json", "l3.json"]
-    ];
-    return datas[t][Math.min(l,datas[t].length-1)];
+    if (t == 0) {
+      return "sample.json";
+    } else {
+      if (!l || l == "l0") return "preserving.json";
+      else return l + ".json";
+    }
   }
   function show_data() {
-    d3.json(json_datas(timeology,line), function(dat) {
+    d3.json(json_datas(timeology,focus), function(dat) {
       metro.state(dat).focus(focus).animate(1000).stop();
       if (timeology == 0) {
         d3.selectAll(".axis").transition().duration(1000).style("opacity", 0);
@@ -70,9 +70,6 @@ function slideshow(metro) {
               .text(d.title);
             div.insert("p")
               .text(d.text);
-            if (typeof d.line !== 'undefined') {
-              line = d.line;
-            }
           });
         n.exit().remove();
       });
@@ -154,12 +151,11 @@ function slideshow(metro) {
 
     //legend and highlighting for different lines
     linecontrols.selectAll(".lines")
-      .data([// turn this into a real thing later...
-             {name: "no highlight", svg_id: "svg_none"},
-             {name: "debt, austerity, credit", focus: "l0", svg_id: "svg_legend", color_id: "color_blue"},
+      .data([{name: "debt, austerity, credit", focus: "l0", svg_id: "svg_legend", color_id: "color_blue"},
              {name: "strike, riot, bank", focus: "l1", svg_id: "svg_legend", color_id: "color_orange"},
              {name: "germany, euro, merkel", focus: "l2", svg_id: "svg_legend", color_id: "color_green"},
              {name: "imf, fund, strauss", focus: "l3", svg_id: "svg_legend", color_id: "color_red"},
+             {name: "view all", svg_id: "svg_legend", color_id: "color_none"},
              ])
       .enter()
       .insert("span")
@@ -171,32 +167,31 @@ function slideshow(metro) {
           .attr("id", function(_,i) {return lid + i})
           .attr("value", function(_,i) {return i})
           .on("change", function(d,i) {
-            if (i != line) {
-              line = i;
+            if (focus != d.focus) {
               focus = d.focus;
               show_data();
             }
           });
         span.insert("label")
           .attr("for", function(_,i) {return lid + i})
-          .text(function(d) {return d.name})
-            .insert("svg")
-            .attr("id",function(d,_) {return d.svg_id;})
+          .call(function(label) {
+            label.insert("svg")
+              .attr("id",function(d,_) {return d.svg_id;})
               .insert("line")
               .attr("id",function(d,_) {return d.color_id;})
-              .attr("x1","5")
+              .attr("x1","0")
               .attr("y1","7")
-              .attr("x2","20")
+              .attr("x2","15")
               .attr("y2","7");
+            label.insert("span").text(function(d) {return d.name});
+          });
       })
       ;
     linecontrols.selectAll("input[type=radio]")
         .property("checked", function(d,i) {
-          if (i == line) 
-            focus = d.focus;
-          return i == line;
+          return focus == d.focus;
         });
-    linecontrols.jq().buttonset();
+    linecontrols.jq().buttonsetv();
 
     //mostly fixed bug by preserving selected state.  but, now sometimes has black text on black background, not very repeatable though.
     show_data();
