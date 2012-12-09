@@ -584,7 +584,13 @@ function metromap(container, debug) {
     var nodemap = d3.map();
     var linemap = d3.map();
     var linkmap = d3.map();
-    st.nodes.forEach(function(v) {v.date = new Date(v.date); nodemap.set(v.id, v)});
+    st.nodes.forEach(function(v) {
+      v.date = new Date(v.date); 
+      force.nodes().forEach(function(old_n) {
+        v.selected = v.selected || (old_n.selected && old_n.id == v.id);
+      });
+      nodemap.set(v.id, v);
+    });
     st.lines.forEach(function(v) {linemap.set(v.id, v)});
     st.links.forEach(function(v) {linkmap.set(v.id, v)});
     function unid(map) {return function(v) {return map.get(v)}}

@@ -207,7 +207,7 @@ function slideshow(metro) {
     linecontrols.jq().buttonset();
 
     //metro.captionPredicate(steps[current].show || function() {return false;});    
-    //TODO BUG!!! only one of these works.  either show_data give you the line focus, or metro.show gives you the selection
+    //mostly fixed bug by preserving selected state.  but, now sometimes has black text on black background, not very repeatable though.
     show_data();
     metro.show(steps[current].show || false);
     if (typeof steps[current].show === 'undefined') showcallback(); //empties fulltext if there is no show
