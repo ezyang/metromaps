@@ -18,12 +18,6 @@ var NodeType = {
  * the accessors on the closure are the same as force directed layout,
  * here are some of the new ones:
  *
- * captionPredicate
- *    a function which takes a node data element and returns true if the
- *    caption should be shown for this node, and false otherwise.
- *
- *        metro.captionPredicate(function(d) {return d.id == 'n12345'})
- *
  * mode
  *    the mode of the visualization, either MetroMode.VIEW (for end-user
  *    viewing) or MetroMode.EDIT (for development work).  In VIEW mode,
@@ -102,7 +96,7 @@ var NodeType = {
  * Checkout getState() and setState() for more canonical code.
  *
  */
-function metromap(container) {
+function metromap(container, debug) {
 
   var margin = {top: 0, right: 70, bottom: 20, left: 70};
 
@@ -122,13 +116,12 @@ function metromap(container) {
   d3_layout_force_pausable(force);
 
   var capWidth = 130;
-  var capHeight = 60;
+  var capHeight = 64;
 
   var color             = d3.scale.category10(),
       dur               = 500,
       mode              = MetroMode.EDIT,
-      lines             = [],
-      captionPredicate  = function() {return false;};
+      lines             = [];
 
   // the ranges of this scale is controlled by 'octoforce', 'monoforce'
   // and 'timeforce'
@@ -143,6 +136,8 @@ function metromap(container) {
     // update on changes)
     svg.selectAll(".circle")
       .attr("stroke", function (d) { return (d.fixed & 1) && mode == MetroMode.EDIT ? "#EEE" : "#000" })
+      .attr("fill", function (d) { return d.selected ? "black" : "white" })
+      .attr("r", function (d) { return d.selected ? 16 : d.type != NodeType.DUMMY ? 8 : 4 })
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; });
     svg.selectAll(".line")
@@ -157,9 +152,15 @@ function metromap(container) {
     svg.selectAll(".metrotext")
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")" })
       .each(function(d) {
-        d3.select(this).selectAll(".fo")
+        var fo = d3.select(this).selectAll(".fo")
           .attr("x", d.textoffset ? d.textoffset[0] : 0)
           .attr("y", d.textoffset ? d.textoffset[1] : 0);
+        fo.selectAll(".thediv")
+          .style("background", function(d) { return d.selected ? "black" : "inherit" })
+          .style("color", function(d) { return d.selected ? "white" : "inherit" });
+        fo.selectAll(".thespan")
+          .style("background", function(d) { return d.selected ? "inherit" : "rgba(255,255,255,0.7)" });
+          // would be nice if we could get rid of spacing, ALAS!
       })
   }
 
@@ -184,7 +185,7 @@ function metromap(container) {
   }
 
   realsvg.on("click", onlyView(function() {
-    captionPredicate = function() {return false;};
+    force.nodes().forEach(function(d) { d.selected = false; });
     redraw();
   }));
 
@@ -317,10 +318,11 @@ function metromap(container) {
       .attr("cy", function(d) { return d.y; })
       // XXX problem: drag still interferes with clicks
       // We really do want to deregister them [DRAGUNREGISTER]
-      .call(mydrag)
+      .call(debug ? mydrag : function() {})
       // XXX make this hitbox larger
       .on("click", viewEdit(function(d) {
-        captionPredicate = function(d2) {return d2 == d}
+        force.nodes().forEach(function(d) { d.selected = false; });
+        d.selected = true;
         d3.event.stopPropagation();
         redraw();
       }, function(d) {
@@ -347,7 +349,6 @@ function metromap(container) {
       .on("dblclick", onlyEdit(function(d) { d.fixed = !d.fixed; redraw(); }));
 
     circle.filter(function(d) {return d.type != NodeType.DUMMY})
-      .attr("r", 8)
       .attr("stroke", function (d) { return (d.fixed & 1) && mode == MetroMode.EDIT ? "#EEE" : "#000" })
       .attr("stroke-width", 3)
       .attr("fill", "#FFF");
@@ -433,10 +434,16 @@ function metromap(container) {
       .insert("g")
       .attr("transform", "translate("+(-capWidth/2)+","+(-capHeight-10)+")")
       .insert("foreignObject")
+      .on("click", onlyView(function(d) {
+        force.nodes().forEach(function(d) { d.selected = false; });
+        d.selected = true;
+        d3.event.stopPropagation();
+        redraw();
+      }))
       .attr("class", "fo") // see http://stackoverflow.com/questions/11742812/cannot-select-svg-foreignobject-element-in-d3
       .attr("width", capWidth)
       .attr("height", capHeight)
-      .call(d3.behavior.drag()
+      .call(debug ? d3.behavior.drag()
               .on("dragstart", onlyEdit(function (d) { d.fixed |= 2; }))
               .on("drag", onlyEdit(function(d) {
                 var el = d3.select(this);
@@ -449,6 +456,7 @@ function metromap(container) {
                 redraw();
               }))
               .on("dragend", onlyEdit(function(d) { d.fixed &= 1; }))
+              : function() {}
               )
       .insert("xhtml:div")
       .style("height", capHeight + "px")
@@ -457,8 +465,13 @@ function metromap(container) {
       .style("line-height", "1.2")
       .style("vertical-align", "bottom")
       .style("text-align", "center")
+      .insert("div")
+      .attr("class", "thediv")
+      .style("padding", "1px 0 1px 0")
+      .style("margin", "0 0 3px 0")
+      .style("border-radius", "3px")
       .insert("span")
-      .style("background", "rgba(255,255,255,0.7)"); // would be nice if we could get rid of spacing, ALAS!
+      .attr("class", "thespan");
     textdiv.insert("span").text(function(d) {return d.label});
     textdiv.insert("br");
     textdiv.insert("span").text(function(d) {return d3.time.format("%Y-%m-%d")(d.date)});
@@ -525,11 +538,18 @@ function metromap(container) {
     }
     return my;
   }
-  my.captionPredicate = function(v) {
-    if (!arguments.length) return captionPredicate;
-    captionPredicate = v;
+  my.show = function(v) {
+    force.nodes().forEach(function(n) {
+      if (v) {
+        n.selected = n.type != NodeType.DUMMY && n.id == v;
+        if (n.selected) {
+          // hit a callback
+        }
+      } else {
+        n.selected = false;
+      }
+    });
     redraw();
-    return my;
   }
 
   // essentially, these are copies of nodes/links/lines but with object

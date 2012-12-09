@@ -6,8 +6,8 @@ function slideshow(metro) {
   var topology = 1;
   var steps = [
     {id: 0, title: "Non-linear narrative", text: "People think of time as a linear progression, but actually, it's more like a wibbly wobbly ball of timey wimey stuff.", img: "sample.png"},
-    {id: 1, title: "Step 1", text: "First step.", show: function(x) {return x.id == "n11072"} },
-    {id: 2, title: "Step 2", text: "Second step.", show: function(x) {return x.id == "n11496"} },
+    {id: 1, title: "Step 1", text: "First step.", show: "n11072" },
+    {id: 2, title: "Step 2", text: "Second step.", show: "n11496" },
   ];
   var id = fresh("slideshow");
   var tid = fresh("topology");
@@ -122,7 +122,8 @@ function slideshow(metro) {
         n.exit().remove();
       });
 
-    metro.captionPredicate(steps[current].show || function() {return false;});
+    //metro.captionPredicate(steps[current].show || function() {return false;});
+    metro.show(steps[current].show || false);
   }
   my.current = function(v) {
     if (!arguments.length) return current;

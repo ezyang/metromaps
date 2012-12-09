@@ -175,7 +175,9 @@ function initData(callback) {
   });
 }
 
-metro = metromap(d3.select("#svg-container"))
+var debug = window.location.hash == "#debug";
+
+metro = metromap(d3.select("#svg-container"), debug)
   .size([1000, 600]);
 
 function clear() {
@@ -184,7 +186,7 @@ function clear() {
 }
 
 slideshow(metro)(d3.select("#slideshow-controls"), d3.select("#svg-controls"), d3.select("#slideshow-text"));
-if (window.location.hash == "#debug") {
+if (debug) {
   var state = localStorage.getItem("state");
   try {
     var parsed = JSON.parse(state);
