@@ -156,10 +156,10 @@ function metromap(container, debug) {
           .attr("x", d.textoffset ? d.textoffset[0] : 0)
           .attr("y", d.textoffset ? d.textoffset[1] : 0);
         fo.selectAll(".thediv")
-          .style("background", function(d) { return d.selected ? "black" : "inherit" })
-          .style("color", function(d) { return d.selected ? "white" : "inherit" });
+          .style("background", d.selected ? "black" : "inherit")
+          .style("color", d.selected ? "white" : "inherit");
         fo.selectAll(".thespan")
-          .style("background", function(d) { return d.selected ? "inherit" : "rgba(255,255,255,0.7)" });
+          .style("background", d.selected ? "inherit" : "rgba(255,255,255,0.7)");
           // would be nice if we could get rid of spacing, ALAS!
       })
   }
@@ -316,13 +316,10 @@ function metromap(container, debug) {
       .attr("class", "circle")
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; })
-      // XXX problem: drag still interferes with clicks
-      // We really do want to deregister them [DRAGUNREGISTER]
       .call(debug ? mydrag : function() {})
       // XXX make this hitbox larger
       .on("click", viewEdit(function(d) {
-        force.nodes().forEach(function(d) { d.selected = false; });
-        d.selected = true;
+        force.nodes().forEach(function(d2) { d.selected = d2.id == d.id; });
         d3.event.stopPropagation();
         redraw();
       }, function(d) {
@@ -435,8 +432,7 @@ function metromap(container, debug) {
       .attr("transform", "translate("+(-capWidth/2)+","+(-capHeight-10)+")")
       .insert("foreignObject")
       .on("click", onlyView(function(d) {
-        force.nodes().forEach(function(d) { d.selected = false; });
-        d.selected = true;
+        force.nodes().forEach(function(d2) { d2.selected = d2.id == d.id; });
         d3.event.stopPropagation();
         redraw();
       }))
@@ -624,6 +620,8 @@ function metromap(container, debug) {
       .filter(function(d) {return d.type != NodeType.DUMMY})
       .transition().duration(dur)
       .attr("stroke", function (d) { return d.fixed & 1 && mode == MetroMode.EDIT ? "#EEE" : "#000" })
+      .attr("fill", function (d) { return d.selected ? "black" : "white" })
+      .attr("r", function (d) { return d.selected ? 16 : d.type != NodeType.DUMMY ? 8 : 4 })
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; })
       .style("opacity", function(d) { return d.unfocus ? 0 : 1 });
@@ -644,9 +642,14 @@ function metromap(container, debug) {
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")" })
       .style("opacity", function(d) { return d.unfocus ? 0 : 1 })
       .each(function(d) {
-        d3.select(this).selectAll(".fo").transition().duration(dur)
+        var fo = d3.select(this).selectAll(".fo").transition().duration(dur)
           .attr("x", d.textoffset ? d.textoffset[0] : 0)
           .attr("y", d.textoffset ? d.textoffset[1] : 0);
+        fo.selectAll(".thediv").transition().duration(dur)
+          .style("background", d.selected ? "black" : "inherit")
+          .style("color", d.selected ? "white" : "inherit");
+        fo.selectAll(".thespan").transition().duration(dur)
+          .style("background", d.selected ? "inherit" : "rgba(255,255,255,0.7)");
       })
     return my;
   }
