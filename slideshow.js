@@ -5,6 +5,7 @@ function slideshow(metro) {
   var current = 0;
   var timeology = 1;
   var line = 0;
+  var focus = "";
   var steps = [
     {id: 0, title: "Non-linear narrative", text: "People think of time as a linear progression, but actually, it's more like a wibbly wobbly ball of timey wimey stuff.", img: "sample.png"},
     {id: 1, title: "Step 1", text: "First step.", show: "n11072" },
@@ -18,10 +19,26 @@ function slideshow(metro) {
   });
   var tid = fresh("timeology");
   var lid = fresh("line");
-  
+  function json_datas(t, l) {
+    var datas = [
+      ["sample.json"],
+      ["preserving.json", "preserving.json", "l1.json", "l2.json", "l3.json"]
+    ];
+    return datas[t][Math.min(l,datas[t].length-1)];
+  }
+  function show_data() {
+    d3.json(json_datas(timeology,line), function(dat) {
+      metro.state(dat).focus(focus).animate(1000).stop();
+      if (timeology == 0) {
+        d3.selectAll(".axis").transition().duration(1000).style("opacity", 0);
+      } else {
+        d3.selectAll(".axis").transition().duration(1000).style("opacity", 1);
+      }
+    });
+  }
   // CLASSES: page, next, text
   // XXX todo closure-ify me
-  function my(controls, timecontrols, legendcontrols, panel) {
+  function my(controls, timecontrols, linecontrols, panel) {
 
     // The direct-jump numbered buttons: [1] [2] [3]
     controls.selectAll(".page")
@@ -71,8 +88,8 @@ function slideshow(metro) {
 
     //topological vs. time
     timecontrols.selectAll(".timeologys")
-      .data([{name: "Topological", data: "sample.json"},
-             {name: "Time to scale", data: "preserving.json"}
+      .data([{name: "Topological"},
+             {name: "Time to scale"}
              ])
       .enter()
       .insert("span")
@@ -86,14 +103,7 @@ function slideshow(metro) {
           .on("change", function(d,i) {
             if (i != timeology) {
               timeology = i;
-              d3.json(d.data, function(dat) {
-                metro.state(dat).animate(1000).stop();
-                if (timeology == 0) {
-                  d3.selectAll(".axis").transition().duration(1000).style("opacity", 0);
-                } else {
-                  d3.selectAll(".axis").transition().duration(1000).style("opacity", 1);
-                }
-              });
+              show_data();
             }
           });
         span.insert("label")
@@ -106,7 +116,7 @@ function slideshow(metro) {
     timecontrols.jq().buttonset();
 
     //legend and highlighting for different lines
-    legendcontrols.selectAll(".lines")
+    linecontrols.selectAll(".lines")
       .data([// turn this into a real thing later...
              {name: "None"},
              {name: "L0", data: "preserving.json", focus: "l0"},
@@ -126,14 +136,8 @@ function slideshow(metro) {
           .on("change", function(d,i) {
             if (i != line) {
               line = i;
-              d3.json(d.data, function(dat) {
-                metro.state(dat).focus(d.focus).animate(1000).stop();
-                if (line == 0) {
-                  d3.selectAll(".axis").transition().duration(1000).style("opacity", 0);
-                } else {
-                  d3.selectAll(".axis").transition().duration(1000).style("opacity", 1);
-                }
-              });
+              focus = d.focus;
+              show_data();
             }
           });
         span.insert("label")
@@ -141,9 +145,12 @@ function slideshow(metro) {
           .text(function(d) {return d.name});
       })
       ;
-    legendcontrols.selectAll("input[type=radio]")
+    linecontrols.selectAll("input[type=radio]")
         .property("checked", function(_,i) {return i == line});
-    legendcontrols.jq().buttonset();
+    linecontrols.jq().buttonset();
+
+    //actually show the data
+    
 
     // The title and description of the page
     panel.selectAll(".text")

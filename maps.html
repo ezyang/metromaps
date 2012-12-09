@@ -74,7 +74,7 @@
     </div>
     <script>
 var metro; // for easy console access
-var slideshow; //ditto
+var ss; //ditto
 function initData(callback) {
   d3.xml("greek2.graphml", function(doc) {
     var nodetable = d3.map();
@@ -197,7 +197,9 @@ function clear() {
   initData();
 }
 
-slideshow = slideshow(metro)(d3.select("#slideshow-controls"), d3.select("#time-controls"), d3.select("#line-controls"), d3.select("#slideshow-text"));
+ss = slideshow(metro);
+ss(d3.select("#slideshow-controls"), d3.select("#time-controls"), d3.select("#line-controls"), d3.select("#slideshow-text"));
+
 if (debug) {
   var state = localStorage.getItem("state");
   try {
