@@ -16,7 +16,10 @@ function slideshow(metro) {
     $("#fulltext").empty();
     if (d) {
       d3.html("fulltext/" + d.id.substr(1) + ".html", function(doc) {
-        $("#fulltext").append(doc);
+        $("#fulltext")
+          .append("<h1>"+d.label+"</h1>")
+          .append("<p>"+d3.time.format("%Y-%m-%d")(d.date)+"</p>")
+          .append(doc);
       });
     }
   });
