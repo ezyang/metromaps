@@ -53,14 +53,15 @@
     <!--<h1>Metro Maps of the News</h1>-->
     <table>
       <tr>
-        <td colspan="2" id="svg-container">
+        <td colspan="3" id="svg-container">
         </td>
         <td rowspan="3" id="fulltext">
         </td>
       </tr>
       <tr id="controls">
           <td id="slideshow-controls"></td>
-          <td id="svg-controls"></td>
+          <td id="time-controls"></td>
+          <td id="line-controls"></td>
       </tr>
       <tr>
         <td colspan="2" style="vertical-align:top">
@@ -73,6 +74,7 @@
     </div>
     <script>
 var metro; // for easy console access
+var slideshow; //ditto
 function initData(callback) {
   d3.xml("greek2.graphml", function(doc) {
     var nodetable = d3.map();
@@ -195,7 +197,7 @@ function clear() {
   initData();
 }
 
-slideshow(metro)(d3.select("#slideshow-controls"), d3.select("#svg-controls"), d3.select("#slideshow-text"));
+slideshow = slideshow(metro)(d3.select("#slideshow-controls"), d3.select("#time-controls"), d3.select("#line-controls"), d3.select("#slideshow-text"));
 if (debug) {
   var state = localStorage.getItem("state");
   try {
