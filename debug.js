@@ -67,6 +67,28 @@ function debugForce(force, selection) {
     .each(function() {$(this).button()});
   btns.jq().buttonset();
 
+  var linear =
+      [ {name: "Octilinear", line: octilinear },
+        {name: "Hexilinear", line: hexilinear },
+      ]
+  var linear_btns = div.insert("span").text(" ");
+  linear_btns.selectAll(".btn").data(linear)
+    .enter()
+    .insert("span")
+    .attr("class", "btn")
+    .call(function(span) {
+      span.insert("input")
+        .attr("type", "radio")
+        .attr("name", "linear")
+        .attr("id", function(_,i) {return "linear" + i})
+        .property("checked", function(d) {return d.name == "Octilinear"})
+        .on("change", function(d) {force.directions(d.line); force.start();});
+      span.insert("label")
+        .attr("for", function(_,i) {return "linear" + i})
+        .text(function(d) {return d.name});
+    });
+  linear_btns.jq().buttonset();
+
   function getAlphaSlider() {
     return selection.selectAll('.slider').filter(function (d) {return d.alpha});
   }

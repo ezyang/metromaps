@@ -7,6 +7,11 @@ var octilinear = function() {
   return [[1,0],[x,x],[0,1],[-x,x],[-1,0],[-x,-x],[0,-1],[x,-x]]
 }();
 
+var hexilinear = function() {
+  var x = Math.sqrt(3)/2;
+  return [[1,0],[1/2,x],[-1/2,x],[-1,0],[-1/2,-x],[1/2,-x]]
+}();
+
 function dot(v1, v2) { // V -> V -> R
   return v1[0] * v2[0] + v1[1] * v2[1];
 }
