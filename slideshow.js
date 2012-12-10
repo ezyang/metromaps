@@ -7,13 +7,11 @@ function slideshow(metro) {
   var timeology = 1;
   var focus;
   var steps = [
-    {id: 0, title: "Visualizing the News through Metromaps", text: "Our project, Visualizing the News through Metromaps, helps users unfamiliar with a set of news stories better grasp and comprehend the threads between different storylines in the news. In this example, we have a collection of news stories related to the Greek debt crisis, and Dafna's algorithm has generated the significant threads among the stories.", img: "sample.png"},
-    {id: 1, title: "Thread 1: debt, austerity, credit", line:"l0", show: "n9572", text: "The first main thread encompasses the keywords \"debt, austery, credit\", and highlights news stories talking directly about Greek debt.  It starts in 2009, when Greek's debt is about to grow to the point where drastic measures will need to be taken."},
-    {id: 2, title: "Thread 1: debt, austerity, credit", line:"l0", show: "n13518", text: "At the end, many Greeks realize that there are major problems in Greece that caused the debt crisis."},
-    {id: 3, title: "Thread 2: stike, riot, bank", line:"l0", show: "n11072", text: "At the same time, due to certain measures were put into place to try to deal with the problems..."},
-    {id: 4, title: "Thread 2: stike, riot, bank", line:"l1", show: "n11324", text: "...they sparked protests and strikes that gradually spread throughout the country."},
-    {id: 5, title: "Thread 2: stike, riot, bank", line:"l1", show: "n13913", text: "These protests grew and caused great havoc in the daily lives of most Greeks, but eventually quieted down later. "},
-    {id: 6, title: "Greek Debt Crisis Metromap", text: "There were many ongoing and synchronous different threads throughout the crisis, and our visualization is able to capture this data from Dafna's algorithm and lay it out in a very clean and comprehendable format. The visualization highlights for the reader so that he can identify salient threads that have some common player, as well as specific news stories that cover overlapping threads."},
+    {id: 0, title: "Visualizing the News through Metro Maps", text: "<p>Suppose that you are trying to understand the Greek credit crisis.  You decide to read articles published by the New York Times on the subject, and discover that while there are a lot of stories, it is often hard to contextualize any given story: there are multiple narratives, interacting with each other to create a complex web of stories.  How do you navigate these stories? Why, with a metro map, of course!  Metro maps are a technique developed by Dafna Shahaf designed to assist in the understanding of story lines that have nontrivial relationships with one another.</p>"},
+    {id: 1, title: "Greek debt", line:"l0", show: "n9572", text: "<p>Each metro line represents distinct story line.  For example, this particular line can be thought of as the main storyline of the Greek credit crisis, starting with statements from Papaconstantinou saying that Greek will control the debt. Focusing on a particular story allows you to read the full text in the right panel.</p>"},
+    {id: 2, title: "Evolution over time", line:"l0", show: "n11072", text: "<p>Each story on the metroline is also positioned according to the time it occured, so as you travel from left to right, stories unfold. On this line, statements by the government were soon followed up with concrete plans for Greek austerity measures, and so on...  However, a story can be an important component of multiple narratives.  For example, while the austerity measures were an important part of the Greek deficit cutting plan...</p>"},
+    {id: 3, title: "A branching storyline: strikes and riots", line:"l1", show: "n11324", text: "...these measures also sparked protests and strikes. These events, while related to the Greek credit crisis, can be thought to constitute a distinct storyline from governmental policy.  Thus they live on a different metro line, albeit connected at a key story."},
+    {id: 4, title: "Greek Debt Crisis Metromap", text: "There were many other stories proceeding throughout the crisis, and our visualization is able to display all of this information in a clean and comprehendable format.  Metro maps are not only useful for news, but can be used for many domains of knowledge, including scientific research publications. We invite you to delve deeper into the Greek credit crisis, using this metro map as your guide."},
   ];
 
   var id = fresh("slideshow");
@@ -66,8 +64,7 @@ function slideshow(metro) {
             }
             div.insert("h2")
               .text(d.title);
-            div.insert("p")
-              .text(d.text);
+            div.jq().append(d.text);
           });
         n.exit().remove();
       });
