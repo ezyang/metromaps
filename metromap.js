@@ -189,13 +189,14 @@ function metromap(container, debug) {
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")" })
       .style("opacity", function(d) { return d.unfocus ? 0 : 1 })
       .each(function(d) {
-        var fo = d3.select(this).selectAll(".fo").transition().duration(dur)
+        var fo = d3.select(this).selectAll(".fo");
+        fo.transition().duration(dur)
           .attr("x", d.textoffset ? d.textoffset[0] : 0)
           .attr("y", d.textoffset ? d.textoffset[1] : 0);
-        fo.selectAll(".thediv").transition().duration(dur)
-          .style("background", d.selected ? "black" : "inherit")
-          .style("color", d.selected ? "white" : "inherit");
-        fo.selectAll(".thespan").transition().duration(dur)
+        fo.selectAll(".thediv")
+          .style("background", d.selected ? "rgba(0,0,0,1)" : "rgba(0,0,0,0)")
+          .style("color", d.selected ? "white" : "black");
+        fo.selectAll(".thespan")
           .style("background", d.selected ? "inherit" : "rgba(255,255,255,0.7)");
       })
   }
