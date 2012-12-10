@@ -162,10 +162,10 @@ function metromap(container, debug) {
     // XXX use precomputed selection for efficiency (but remember to
     // update on changes)
     svg.selectAll(".circle")
-      .transition().duration(dur)
-      .attr("stroke", function (d) { return (d.fixed & 1) && mode == MetroMode.EDIT ? "#EEE" : "#000" })
       .attr("fill", function (d) { return d.selected ? "black" : "white" })
       .attr("r", function (d) { return d.selected ? 16 : d.type != NodeType.DUMMY ? 8 : 4 })
+      .transition().duration(dur)
+      .attr("stroke", function (d) { return (d.fixed & 1) && mode == MetroMode.EDIT ? "#EEE" : "#000" })
       .attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; })
       .style("opacity", function(d) { return d.unfocus ? 0 : 1 });
