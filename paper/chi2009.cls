@@ -390,7 +390,7 @@
 \newfont{\subttlfnt}{phvr7t at 14pt}                    % 05-16-2006 atd
 \newfont{\subttlit}{phvro7t at 14pt}                     % 05-16-2006 atd
 \newfont{\subttlbf}{phvb7t at 14pt}                    % 05-16-2006 atd
-\newfont{\aufnt}{ptmb6t at 12pt}                    % 05-16-2006 atd
+\newfont{\aufnt}{ptmbo7t at 12pt}                    % 05-16-2006 atd
 \newfont{\auit}{ptmbo7t at 12pt}                    % 05-16-2006 atd
 \newfont{\affaddr}{ptmr7t at 12pt}                    % 05-16-2006 atd
 \newfont{\affaddrit}{ptmro7t at 12pt}                    % 05-16-2006 atd
