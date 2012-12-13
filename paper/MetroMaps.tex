@@ -89,9 +89,6 @@ Timeforce enforces the semantics of our data, using the timestamp that that ever
 Lastly, we also implemented a softer version of the timeforce, called the monoforce, that just enforced chronological order.  It ensured that later events along a given metro line would appear to the right of earlier events, but it didn’t push it toward the scaled time.  This allowed for more flexible editing options while refining the maps, and leads to the “topological” view in our demo.
 All of these forces, along with the ones provided in d3 (charge, gravity, friction, edge length, and edge strength), were incremented based on a annealing variable called alpha.  Whenever the layout changes, such as at the beginning of the simulation when the user drags a node, the layout “heats up” with the alpha set to 1.  Then, as the simulation progresses, alpha gradually “cools down” to 0 at which point the simulation ceases so as to not waste unnecessary CPU cycles after a moderate equilibrium is found.  As alpha varies, different forces can be applied at different strengths.  In our program, the original forces such as node charge and gravity are stronger as a “first step” to allow the nodes to disperse in a somewhat regular fashion.  Then, our forces of octolinearity and timeforce take precedence to organize the nodes in a cleaner and more semantic fashion.  Both the time scaling and linearity allow the map to be much easier to understand for the viewer.  In order to facilitate the editing of maps, our editor allows great flexibility in the tuning of these parameters.  
 
-\subsection{Presentation}
-We describe out design choices for the presentation mode and our motivations.
-
 \section{Results}
 
 \includegraphics[width=\columnwidth]{TimeScaledMap.png}
