@@ -1,0 +1,18 @@
+\begin{thebibliography}{1}
+
+\bibitem{hong2005}
+s.-h. hong, d.~merrick, and h.~a.~d. do~nascimento.
+\newblock {the metro map layout problem}.
+\newblock {\em graph drawing}, 2005.
+
+\bibitem{nollenburg2006}
+m.~n\"{o}llenburg and a.~wolff.
+\newblock {a mixed-integer program for drawing high-quality metro maps}.
+\newblock {\em graph drawing}, pages 321--333, 2006.
+
+\bibitem{stott2011}
+j.~stott and p.~rodgers.
+\newblock {automatic metro map layout using multicriteria optimization}.
+\newblock {\em \ldots ieee transactions on}, 17(1):101--14, Jan. 2011.
+
+\end{thebibliography}

@@ -1,0 +1,183 @@
+\documentclass{chi2009}
+\usepackage{times}
+\usepackage{url}
+\usepackage{graphics}
+\usepackage{color}
+\usepackage[pdftex]{hyperref}
+\hypersetup{%
+pdftitle={Your Title},
+pdfauthor={Your Authors},
+pdfkeywords={your keywords},
+bookmarksnumbered,
+pdfstartview={FitH},
+colorlinks,
+citecolor=black,
+filecolor=black,
+linkcolor=black,
+urlcolor=black,
+breaklinks=true,
+}
+\newcommand{\comment}[1]{}
+\definecolor{Orange}{rgb}{1,0.5,0}
+\newcommand{\todo}[1]{\textsf{\textbf{\textcolor{Orange}{[[#1]]}}}}
+
+\pagenumbering{arabic}  % Arabic page numbers for submission.  Remove this line to eliminate page numbers for the camera ready copy
+
+\begin{document}
+% to make various LaTeX processors do the right thing with page size
+\special{papersize=8.5in,11in}
+\setlength{\paperheight}{11in}
+\setlength{\paperwidth}{8.5in}
+\setlength{\pdfpageheight}{\paperheight}
+\setlength{\pdfpagewidth}{\paperwidth}
+
+% use this command to override the default ACM copyright statement 
+% (e.g. for preprints). Remove for camera ready copy.
+\toappear{Submitted for review to CHI 2009.}
+
+\title{The Title}
+\numberofauthors{2}
+\author{
+  \alignauthor Author 1\\
+    \affaddr{Affiliation}\\
+    \affaddr{Affiliation}\\
+    \email{author@a.com}
+  \alignauthor Author 2\\
+    \affaddr{Affiliation}\\
+    \affaddr{Affiliation}\\
+    \email{author2@b.com}
+}
+
+\maketitle
+
+\begin{abstract}
+  In this paper we describe the formatting requirements for SIGCHI
+  Conference Proceedings, and offer recommendations on writing for the
+  worldwide SIGCHI readership.  Please review this document even if
+  you have submitted to SIGCHI conferences before, for some format
+  details have changed relative to previous years. These include the
+  formatting of table captions, the formatting of references, and a
+  requirement to include ACM DL indexing information.
+\end{abstract}
+
+\keywords{put author keywords here} 
+
+\category{H.5.2}{Information Interfaces and Presentation}{Miscellaneous}[Optional sub-category]
+
+\section{Introduction}
+
+This format is to be used for submissions that are published in the
+conference proceedings.  We wish to give this volume a consistent,
+high-quality appearance. We therefore ask that authors follow some
+simple guidelines. In essence, you should format your paper exactly
+like this document. The easiest way to do this is simply to download a
+template from the conference web site, and replace the content with
+your own material. The template file contains specially formatted
+styles (e.g., Normal, Heading, Bullet, Table Text, References, Title,
+Author, Affiliation) that will reduce your work in formatting your
+submission.
+
+\section{Page Size and Columns}
+
+On each page your material (not including the page number) should fit
+within a rectangle of 18 x 23.5 cm (7 x 9.25 in.), centered on a US
+letter page, beginning 1.9 cm (.75 in.) from the top of the page, with
+a .85 cm (.33 in.) space between two 8.4 cm (3.3 in.) columns.  On an
+A4 page, use a text area of the same dimensions (18 x 23.5 cm.), again
+centered.  Right margins should be justified, not ragged. Beware,
+especially when using this template on a Macintosh, Word can change
+these dimensions in unexpected ways.
+
+\section{Typeset Text}
+
+Prepare your submissions on a word processor or typesetter.  Please
+note that page layout may change slightly depending upon the printer
+you have specified.  For this document, printing to Adobe Acrobat PDF
+Writer was specified.  In the resulting page layout, Figure 1 appears
+at the top of the left column on page 2, and Table 1 appears at the
+top of the right column on page 2.  You may need to reposition the
+figures if your page layout or PDF-generation software is different.
+
+\subsection{Title and Authors}
+
+Your paper's title, authors and affiliations should run across the
+full width of the page in a single column 17.8 cm (7 in.) wide.  The
+title should be in Helvetica 18-point bold; use Arial if Helvetica is
+not available.  Authors' names should be in Times Roman 12-point bold,
+and affiliations in Times Roman 12-point (note that Author and
+Affiliation are defined Styles in this template file).
+
+To position names and addresses, use a single-row table with invisible
+borders, as in this document.  Alternatively, if only one address is
+needed, use a centered tab stop to center all name and address text on
+the page; for two addresses, use two centered tab stops, and so
+on. For more than three authors, you may have to place some address
+information in a footnote, or in a named section at the end of your
+paper. Please use full international addresses and telephone dialing
+prefixes.  Leave one 10-pt line of white space below the last line of
+affiliations.
+
+\subsection{Abstract and Keywords}
+
+Every submission should begin with an abstract of about 150 words,
+followed by a set of keywords. The abstract and keywords should be
+placed in the left column of the first page under the left half of the
+title. The abstract should be a concise statement of the problem,
+approach and conclusions of the work described.  It should clearly
+state the paper's contribution to the field of HCI.
+
+The first set of keywords will be used to index the paper in the
+proceedings. The second set are used to catalogue the paper in the ACM
+Digital Library. The latter are entries from the ACM Classification
+System~\cite{acm_categories}.  In general, it should only be necessary
+to pick one or more of the H5 subcategories, see
+http://www.acm.org/class/1998/H.5.html
+
+\subsection{Normal or Body Text}
+
+Please use a 10-point Times Roman font or, if this is unavailable,
+another proportional font with serifs, as close as possible in
+appearance to Times Roman 10-point. The Press 10-point font available
+to users of Script is a good substitute for Times Roman. If Times
+Roman is not available, try the font named Computer Modern Roman. On a
+Macintosh, use the font named Times and not Times New Roman. Please
+use sans-serif or non-proportional fonts only for special purposes,
+such as headings or source code text.
+
+\subsection{First Page Copyright Notice}
+
+Leave 3 cm (1.25 in.) of blank space for the copyright notice at the
+bottom of the left column of the first page. In this template a
+floating text box will automatically generate the required space.
+
+\subsection{Subsequent Pages}
+
+On pages beyond the first, start at the top of the page and continue
+in double-column format.  The two columns on the last page should be
+of equal length.
+
+\subsection{References and Citations}
+
+Use a numbered list of references at the end of the article, ordered
+alphabetically by first author, and referenced by numbers in brackets
+[2,4,5,7]. For papers from conference proceedings, include the title
+of the paper and an abbreviated name of the conference (e.g., for
+Interact 2003 proceedings, use Proc. Interact 2003). Do not include
+the location of the conference or the exact date; do include the page
+numbers if available. See the examples of citations at the end of this
+document. Within this template file, use the References style for the
+text of your citation.
+
+Your references should be published materials accessible to the
+public.  Internal technical reports may be cited only if they are
+easily accessible (i.e., you provide the address for obtaining the
+report within your citation) and may be obtained by any reader for a
+nominal fee.  Proprietary information may not be cited. Private
+communications should be acknowledged in the main text, not referenced
+(e.g., ``[Robertson, personal communication]'').
+
+
+\bibliographystyle{abbrv}
+\bibliography{sample}
+
+\end{document}

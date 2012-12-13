@@ -1,0 +1,45 @@
+This is BibTeX, Version 0.99c (TeX Live 2009/Debian)
+The top-level auxiliary file: MetroMaps.aux
+The style file: abbrv.bst
+Database file #1: MetroMaps.bib
+You've used 3 entries,
+            2118 wiz_defined-function locations,
+            513 strings with 4100 characters,
+and the built_in function-call counts, 1041 in all, are:
+= -- 106
+> -- 44
+< -- 1
++ -- 17
+- -- 14
+* -- 69
+:= -- 175
+add.period$ -- 9
+call.type$ -- 3
+change.case$ -- 16
+chr.to.int$ -- 0
+cite$ -- 3
+duplicate$ -- 41
+empty$ -- 76
+format.name$ -- 14
+if$ -- 217
+int.to.chr$ -- 0
+int.to.str$ -- 3
+missing$ -- 3
+newline$ -- 18
+num.names$ -- 6
+pop$ -- 14
+preamble$ -- 1
+purify$ -- 13
+quote$ -- 0
+skip$ -- 35
+stack$ -- 0
+substring$ -- 69
+swap$ -- 12
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 12
+warning$ -- 0
+while$ -- 11
+width$ -- 4
+write$ -- 34

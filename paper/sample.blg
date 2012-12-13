@@ -1,0 +1,47 @@
+This is BibTeX, Version 0.99c (TeX Live 2009/Debian)
+The top-level auxiliary file: sample.aux
+The style file: abbrv.bst
+Database file #1: sample.bib
+Warning--to sort, need author or key in acm_categories
+You've used 1 entry,
+            2118 wiz_defined-function locations,
+            499 strings with 3836 characters,
+and the built_in function-call counts, 177 in all, are:
+= -- 14
+> -- 1
+< -- 0
++ -- 1
+- -- 0
+* -- 7
+:= -- 25
+add.period$ -- 2
+call.type$ -- 1
+change.case$ -- 3
+chr.to.int$ -- 0
+cite$ -- 2
+duplicate$ -- 7
+empty$ -- 24
+format.name$ -- 0
+if$ -- 40
+int.to.chr$ -- 0
+int.to.str$ -- 1
+missing$ -- 0
+newline$ -- 7
+num.names$ -- 0
+pop$ -- 11
+preamble$ -- 1
+purify$ -- 2
+quote$ -- 0
+skip$ -- 6
+stack$ -- 0
+substring$ -- 5
+swap$ -- 1
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 4
+warning$ -- 1
+while$ -- 0
+width$ -- 2
+write$ -- 9
+(There was 1 warning)
