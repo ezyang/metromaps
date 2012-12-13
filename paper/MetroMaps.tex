@@ -73,21 +73,86 @@ We propose a system that makes layout an efficient and easy task. This is import
 If we give non-designer users a simple and powerful tool for metro map visualization of news, we allow people to connect different news stories, and visually summarize complex series of events, and also frame existing content with appropriate context that's likely missing from hyperlinks within the text.
 A key advance in our system is a force-directed layout algorithm that assists the editor in creating a visualization that conforms to the constraints demanded by a metro map of news stories. Allowing the user to meet all these constraints while still allowing effective user control of the layout formed a serious barrier for our development efforts to overcome, and in this paper we share practical advice.
 
-\section{Related Works}
+\section{Related Work}
 
 Metro map layout as a specific problem is a somewhat studied area of research, first initiated by \cite{hong2005}. These papers consider a graph representing a real world metro system, and attempt to lay out an aesthetically pleasing map of it. \cite{nollenburg2006,stott2011} There are many similarities; for example, much of our aesthetic criteria (including the octilinearity of edges) are shared with the related work. However, our work is distinct from these previous pieces of work in the following ways. First, these papers consider metro systems that correspond to a physical geography; thus, they are subject to extra constraints such as preservation of topology and relative positioning of stations. However, since metro maps of the news are abstract entities, we have more flexibility in choosing the topology of our generated maps. Second, these papers consider the generation of a metro map to be a rare occurrence, and thus invest considerable time into the solution to find as globally optimal a layout as possible (sometimes requiring running time on order of hours.) Our work seeks to perform layout in realtime, and relies on user interaction to discover a global optimum. Finally, the temporal nature of news articles mean we have extra constraints to work with when laying out our metro maps of the news.
 
 \section{Method}
 
 \subsection{Force Layout}
-We started with D3.js’s force layout implementation with news stories in the metromap as nodes and lines connecting common news stories in a thread as edges.  Every node has a (x,y) position.  The D3.js force layout increments time steps and applies various forces to the nodes, such as a node charge repulsion between nodes and a gravity pulling all nodes to the center of the canvas.  However, the resulting layouts from the vanilla D3.js implementation are very unstructured.  In order to more cleanly display the metromaps in an easily comprehensible fashion, we introduced a few new forces to the original force layout algorithm.  The main ones are octolinearity, monoforce, and time force.  
 
-It is easier for humans to comprehend a visual map if there are only a few different angles that all the lines are aligned to.  So, octolinear force tends to twist lines so that they are closer to some multiple of 45 degrees.  This makes the map very grid-like and much easier to understand and read.  
+The heart of our project was implementing a layout algorithm for metro
+maps.  Because fully automatic layout of metro maps is a difficult
+task, our layout algorithm adopted a hybrid approach, using force layout
+in combination with custom aesthetic constraints and user input.
 
-Timeforce enforces the semantics of our data, using the timestamp that that every news article has.  We assigned a timeline to the x-axis where every x value meant a certain time, to scale, and the timeforce would nudge each article toward its appropriate time. In the “time-to-scale” view of our presentation demo, this force is set to be extremely strong, so that each node is almost perfectly positioned at an x pixel linearly related to its date of publication.
+We started with D3.js's implementation of force layout.  The default
+implementation offers repulsive charge forces, a pseudo-gravity force
+and fixed-distance geometric constraints for links.  All of the features
+are implemented on top of position Verlet integration, which is a method
+for simulating Newtonian systems.
 
-Lastly, we also implemented a softer version of the timeforce, called the monoforce, that just enforced chronological order.  It ensured that later events along a given metro line would appear to the right of earlier events, but it didn’t push it toward the scaled time.  This allowed for more flexible editing options while refining the maps, and leads to the “topological” view in our demo.
-All of these forces, along with the ones provided in D3.js (charge, gravity, friction, edge length, and edge strength), were incremented based on a annealing variable called alpha.  Whenever the layout changes, such as at the beginning of the simulation when the user drags a node, the layout “heats up” with the alpha set to 1.  Then, as the simulation progresses, alpha gradually “cools down” to 0 at which point the simulation ceases so as to not waste unnecessary CPU cycles after a moderate equilibrium is found.  As alpha varies, different forces can be applied at different strengths.  In our program, the original forces such as node charge and gravity are stronger as a “first step” to allow the nodes to disperse in a somewhat regular fashion.  Then, our forces of octolinearity and timeforce take precedence to organize the nodes in a cleaner and more semantic fashion.  Both the time scaling and linearity allow the map to be much easier to understand for the viewer.  In order to facilitate the editing of maps, our editor allows great flexibility in the tuning of these parameters.  
+One important property of Verlet integration is that custom constraints can
+easily be implemented on top of it.  In D3.js, these custom constraints are
+implement in a \verb|tick| handler, in which a constraint can inspect the
+physical location of all nodes in the diagram and make adjustments to their
+location based on constraints.  This is technically distinct from adding
+``custom forces'' to the diagram, which would need to be incorporated by
+the Verlet algorithm; instead, we simply ``nudge'' nodes to where we would
+like them to be.
+
+Custom constraints were primarily used to fulfill aesthetic criteria.
+The extra constraints we implemented where ``octilinearity'', which
+enforces 45 degrees angles on edges, ``monotonicity'', which enforces a
+relative ordering of nodes based on their date, and ``time-alignment'',
+which enforces a fixed X position based on the date.
+
+``Octilinearity'' was a property that we found most prior work on metro
+maps posited as an aesthetic criterion for a ``good metro map'' (though
+it seems not to be universal, as can be seen from the California Bart
+map.)  This was implemented by considering all edges in our layout, and
+computing the closest 45-degree aligned angle to the current layout of
+the edge.  The constraint is applied by rotating the endpoints around
+the centroid of the edge so that the angle is fulfilled.  The effect of
+octilinearity is primarily local.  Our implementation generalizes so any
+set of angles can be preferred; for example, our final console also
+allows hexilinear layout, which uses 60-degree aligned angles.
+
+``Monotonicity'' was a property unique to abstract metro maps, and can
+be thought as a replacement of the topological constraints physical
+metro maps labor under.  This force ensures that progress from
+left-to-right and from top-to-bottom corresponds to progress in time.
+This corresponds to a lot of important property users might expect out
+of maps, including the fact that two parallel lines should also be parallel
+in time.  This is a global constraint on layout, but since it is relatively
+flexible it can be thought to ``rotate'' the force layout into a good direction.
+
+``Time-alignment'' was another property unique to abstract metro maps,
+and is more strict that monotonicity.  It expresses the idea that metro maps
+are timelines, and should be ``to scale'' with the underlying interval data
+that they express.  There are a few possibilities for a constraint like this:
+one could imagine a constraint where the length of the line connecting two
+stations accurately reflects the amount of time that passed between two events;
+however, our implementation simply fixes the X-coordinate of nodes, so that
+they only have degrees of freedom in the Y-axis.
+
+Coordinating these custom forces along with D3.js's default forces was a nontrivial
+task, which we discuss in more detail in Discussion.
+
+\subsection{Debug Console}
+
+A reusable component we built as a part of this project was a debug
+console for force layout.  In many force layout tasks, the resulting
+visualization is highly sensitive to the parameters of the force layout;
+our goal was to make it easy for a designer in this field to make
+adjustments to these parameters.  Each parameter is represented as a
+slider.  We also added sliders which controlled the degree to which our
+custom forces were applied to the layout.  We also added the ability to
+pause and unpause the force layout algorithm, so that multiple changes
+to parameters and node positions could be made.  Finally, we implemented
+the ability to completely serialize 
+
+You can view the debug console by appending \verb|#debug| to our demo.
 
 \section{Results}
 
@@ -101,6 +166,8 @@ All of these forces, along with the ones provided in D3.js (charge, gravity, fri
 One of the issues that arose as we implemented the forces was the confounding effect some would have on each other.  As the number of forces increased, the complexity of some of the interactions would push the nodes into unintended locations.  The cooling factor helped mitigate some of the issues by parameterizing how strong different forces were at different times, but there were still some that interfered with each other detrimentally.  For example, in the Greek map we had two news articles really close together in time, so the timeforce tried to push them together (but only along the x-axis).  On the other hand, the octoforce determined that the node was close to vertical, so it tried to push the nodes to vertical, and combined the node would fly off the page.  However, by carefully controlling the force strengths, and locking nodes when necessary, we were able to create all the maps in our demonstrations on the order of five minutes.  
 
 \section{Discussion}
+
+All of these forces, along with the ones provided in D3.js (charge, gravity, friction, edge length, and edge strength), were incremented based on a annealing variable called alpha.  Whenever the layout changes, such as at the beginning of the simulation when the user drags a node, the layout “heats up” with the alpha set to 1.  Then, as the simulation progresses, alpha gradually “cools down” to 0 at which point the simulation ceases so as to not waste unnecessary CPU cycles after a moderate equilibrium is found.  As alpha varies, different forces can be applied at different strengths.  In our program, the original forces such as node charge and gravity are stronger as a “first step” to allow the nodes to disperse in a somewhat regular fashion.  Then, our forces of octolinearity and timeforce take precedence to organize the nodes in a cleaner and more semantic fashion.  Both the time scaling and linearity allow the map to be much easier to understand for the viewer.  In order to facilitate the editing of maps, our editor allows great flexibility in the tuning of these parameters.  
 
 During the process of adding our own forces to the force-directed graph model, we gained a few insights from how to better integrate many different potentially conflicting forces in the same simulation.  We discovered that just a straightforward application of our forces would not lead to intuitive behavior from the model.  If we just applied our forces strongly from the start, we would end up with very messy map states.  For example, when octoforce is enforced strongly from the start, we will end up with many nodes overlapping since the octoforce encourages many parallel lines, and they often end up on top of each other.  
 
