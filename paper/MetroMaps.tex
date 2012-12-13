@@ -168,18 +168,85 @@ You can view the debug console by appending \verb|#debug| to our demo.
 
 \section{Discussion}
 
-All of these forces, along with the ones provided in D3.js (charge, gravity, friction, edge length, and edge strength), were incremented based on a annealing variable called alpha.  Whenever the layout changes, such as at the beginning of the simulation when the user drags a node, the layout “heats up” with the alpha set to 1.  Then, as the simulation progresses, alpha gradually “cools down” to 0 at which point the simulation ceases so as to not waste unnecessary CPU cycles after a moderate equilibrium is found.  As alpha varies, different forces can be applied at different strengths.  In our program, the original forces such as node charge and gravity are stronger as a “first step” to allow the nodes to disperse in a somewhat regular fashion.  Then, our forces of octolinearity and timeforce take precedence to organize the nodes in a cleaner and more semantic fashion.  Both the time scaling and linearity allow the map to be much easier to understand for the viewer.  In order to facilitate the editing of maps, our editor allows great flexibility in the tuning of these parameters.
+We learned a number of non-obvious lessons about the interaction between
+our custom forces and the default layout.  We describe some of these
+principles in this section.
 
-One of the issues that arose as we implemented the forces was the confounding effect some would have on each other.  As the number of forces increased, the complexity of some of the interactions would push the nodes into unintended locations.  The cooling factor helped mitigate some of the issues by parameterizing how strong different forces were at different times, but there were still some that interfered with each other detrimentally.  For example, in the Greek map we had two news articles really close together in time, so the timeforce tried to push them together (but only along the x-axis).  On the other hand, the octoforce determined that the node was close to vertical, so it tried to push the nodes to vertical, and combined the node would fly off the page.  However, by carefully controlling the force strengths, and locking nodes when necessary, we were able to create all the maps in our demonstrations on the order of five minutes. 
+\subsection{Last constraint wins}
+
+When adding custom constraints to a force layout, it is important to
+understand that your constraints are not being fed to a magic
+constraint-solving oracle; rather, you are simply moving nodes around on
+the canvas.  As a result, if one constraint moves a node to one
+location, and another constraint moves it back, the end result is that
+the first constraint is ignored.  We knew about this property from the
+very beginning of the project, but it was interesting to see how it manifested
+during real layout.
+
+The most salient effect is that custom forces hugely impede the ability
+of normal charge repulsion to avoid edge-crossing.  For example, if
+octilinearity is turned on while initial layout is occuring, the layout
+algorithm usually failed to find a layout with few edge crossings.
+Additionally, the strength of the forces contributes hugely to this effect:
+for example, when edge lengths were long, the octilinearity force is magnified
+(nodes have to be pushed ``further'' in order to achieve the desired angle),
+and the incidence of edge-crossing correspondingly increased.
+
+\subsection{Staging}
+
+One step we took to mitigate the impact of local custom forces was to stage
+the application of forces.  For example, if one was creating only an octilinear
+layout, we got good results if we first allowed the layout to operate without
+any octilinear forces, and then only gradually ramp up the force near the end of
+layout as a ``quantization'' step.  We have a default scaling of custom forces
+implemented in the debug console---the sliders have two knobs, one indicating
+how strong the force should be at the beginning of layout, and another knob indicating
+how strong the force should be at the end of layout.  The strength of the force is
+inversely scaled with the graph ``cooling'' parameter alpha, which is normally
+used to turn of simulation in order to conserve CPU.
+
+On the other hand, global custom forces such as time-alignment and monotonicity
+did not benefit much from staging.  Since these forces can be thought of as adding
+global constraints to diagram layout, it is better for them to be applied immediately.
+
+\subsection{Unsatisfiability and instability}
+
+The hallmark of an unsatisfiable set of constraints was unstable layout.
+For example, in an early iteration of octilinearity, we tried to enforce
+"straight lines" by having nodes communicate edge orientations to one another,
+and attempt to straighten themselves out.  Test runs on this layout quickly
+resulted in the layout ``blowing up'', with node x and y coordinates running
+of the diagram.
+
+While we attempted to design custom forces which would not be unstable,
+we were not wholly successful.  For example, while performing layout for
+Greek maps, we had two news articles really close together in time, so
+the timeforce tried to push them together (but only along the x-axis).
+On the other hand, the octoforce determined that the node was close to
+vertical, so it attempted to push the nodes to vertical, and combined
+the node would fly off the page (until it was sufficiently counterbalanced
+by the gravity parameter).
+
+The most effective mechanism we found for combating this problem was
+selective mechanisms for \emph{removing} constraints.  For example, one
+constraint was that edges between nodes had to be straight; very early,
+we added the ability to add ``dummy nodes'' which gave edges extra
+degrees of freedom.  Allowing kinks in lines was crucial to achieving
+good layout in some cases.  Additionally (and some what paradoxically),
+\emph{fixing} nodes to a position also proved effective at combating
+instability, since fixed nodes were no longer affected by forces.
+
+\subsection{Editing}
+
+  However, by carefully controlling the force strengths, and locking nodes when necessary, we were able to create all the maps in our demonstrations on the order of five minutes. 
+
 
 During the process of adding our own forces to the force-directed graph model, we gained a few insights from how to better integrate many different potentially conflicting forces in the same simulation.  We discovered that just a straightforward application of our forces would not lead to intuitive behavior from the model.  If we just applied our forces strongly from the start, we would end up with very messy map states.  For example, when octoforce is enforced strongly from the start, we will end up with many nodes overlapping since the octoforce encourages many parallel lines, and they often end up on top of each other.  
 
-By adopting D3.js’s annealing model, we had a more natural way to integrate the original forces with our new forces.  In our first iteration attempt to integrate the forces smoothly, the original charge and gravity layout forces were stronger when the model first heats up, and then they gradually weakened as the octoforce and timeforce overtook it when the model cooled down.  This helped the overlapping problem because the node charges did a good job to prevent that, and then our forces help align the map to a final cleaner state.  
 
 However, this also caused the nodes to keep “bouncing” between the beginning warm state when the original forced-directed graph’s forces were dominant and the ending cooled state when the timeforce was dominant.  When the timeforce was relaxed at the beginning of annealing, the nodes would snap back to a ball like a simple force-directed layout, and then they would slowly stretch out to the time-scaled locations.  This was very disorienting and made the map hard to edit because it was always unstable.  
     It turns out that we had to treat our forces differently with different priorities.  To get a more intuitive behavior, we had to enforce timeforce strongly at all times, while the annealing schedule only affected all the other forces.  This finally gave us a more intuitive behavior for the map editor that allowed for pretty quick creation of maps.  
 
-We learned a lot about how to debug and tune force directed layouts. We think that the “debug panel” for our force layout, which we’ve initialized to generically useful settings and which can very simply be adjusted further by a user, is something that anyone who is making a force directed layout could use (and we are looking to factor it out into a reusable bit of code to help others building a force layout.)
 
 On the viewer side, we found that most of our decisions were quite effective. our project seeks to provide an accessible viewer for metro maps, a new way of looking at complex stories which cannot be summarized on a simple timeline. The hope of the demo is to introduce the audience to the concept of a metro map, and how to interpret it.  In order to facilitate faster comprehension of the metromap, we added the feature to focus on specific news thread and dim the rest, as well as node highlighting when viewing the full text of a news article and a short tutorial.   The slideshow we introduce to walk through functionality served successfully as a tutorial. Users during informal testing and at the poster session demos found the layout aesthetically pleasing, liked the transitions between line focuses and time constraints, and found node and edge highlighting both to be clear.
 
