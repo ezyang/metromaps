@@ -157,6 +157,12 @@ judged it out of scope for this project.
 
 You can view the debug console by appending \verb|#debug| to our demo.
 
+\subsection{Presentation}
+
+Our project seeks to provide an accessible viewer for metro maps, a new way of looking at complex stories which cannot be summarized on a simple timeline. The hope of the demo was to introduce the audience to the concept of a metro map, and how to interpret it.  In order to facilitate faster comprehension of the metromap (and on the suggestion of Jeffrey Heer), we added the feature to focus on specific news thread and dim the rest, as well as node highlighting when viewing the full text of a news article and a short tutorial.   The slideshow we introduce to walk through functionality served successfully as a tutorial. Users during informal testing and at the poster session demos found the layout aesthetically pleasing, liked the transitions between line focuses and time constraints, and found node and edge highlighting both to be clear.
+
+Regarding the metro maps concept in general, most demo users saw the aesthetic appeal but not all found it convincingly superior to, say, a simple color-coded timeline in conveying information. A more formal user study with a wider variety of document sets could replicate the superior performance on information summarization that Shahaf’s original research demonstrated \cite{}.
+
 \section{Results}
 
 \includegraphics[width=\columnwidth]{TimeScaledMap.png}
@@ -205,9 +211,13 @@ how strong the force should be at the end of layout.  The strength of the force 
 inversely scaled with the graph ``cooling'' parameter alpha, which is normally
 used to turn of simulation in order to conserve CPU.
 
-On the other hand, global custom forces such as time-alignment and monotonicity
-did not benefit much from staging.  Since these forces can be thought of as adding
-global constraints to diagram layout, it is better for them to be applied immediately.
+On the other hand, global custom forces such as time-alignment and
+monotonicity did not benefit much from staging.  Since these forces can
+be thought of as adding global constraints to diagram layout, it is
+better for them to be applied immediately.  This was especially evident
+for time-alignment, where relaxing the constraints upon edits resulted
+in nodes ``contracting'' together (since they were no longer fixed in
+X-position) before bouncing back to their original locations.
 
 \subsection{Unsatisfiability and instability}
 
@@ -238,19 +248,19 @@ instability, since fixed nodes were no longer affected by forces.
 
 \subsection{Editing}
 
-  However, by carefully controlling the force strengths, and locking nodes when necessary, we were able to create all the maps in our demonstrations on the order of five minutes. 
+Editing was the most important mechanism for performing global optimization
+of layout; without user input, layouts were prone to getting stuck in local
+optima that were not aesthetically pleasing.  However, we were also pleased
+to find that all of the local forces minimized the amount of effort necessary
+for users performing layout; the four precomputed layouts in our demo took
+on order of five minutes to compose each.  Unfortunately, the editing mechanism
+was not polished enough for us to feel comfortable giving to a general audience.
 
+We believe that there may be a more general story for doing layout of any sort of
+visual media, which is that a hybrid approach where computer constraints perform
+``micro-layout'' and human input perform ``macro-layout'' will allow for quick
+and efficient layout.
 
-During the process of adding our own forces to the force-directed graph model, we gained a few insights from how to better integrate many different potentially conflicting forces in the same simulation.  We discovered that just a straightforward application of our forces would not lead to intuitive behavior from the model.  If we just applied our forces strongly from the start, we would end up with very messy map states.  For example, when octoforce is enforced strongly from the start, we will end up with many nodes overlapping since the octoforce encourages many parallel lines, and they often end up on top of each other.  
-
-
-However, this also caused the nodes to keep “bouncing” between the beginning warm state when the original forced-directed graph’s forces were dominant and the ending cooled state when the timeforce was dominant.  When the timeforce was relaxed at the beginning of annealing, the nodes would snap back to a ball like a simple force-directed layout, and then they would slowly stretch out to the time-scaled locations.  This was very disorienting and made the map hard to edit because it was always unstable.  
-    It turns out that we had to treat our forces differently with different priorities.  To get a more intuitive behavior, we had to enforce timeforce strongly at all times, while the annealing schedule only affected all the other forces.  This finally gave us a more intuitive behavior for the map editor that allowed for pretty quick creation of maps.  
-
-
-On the viewer side, we found that most of our decisions were quite effective. our project seeks to provide an accessible viewer for metro maps, a new way of looking at complex stories which cannot be summarized on a simple timeline. The hope of the demo is to introduce the audience to the concept of a metro map, and how to interpret it.  In order to facilitate faster comprehension of the metromap, we added the feature to focus on specific news thread and dim the rest, as well as node highlighting when viewing the full text of a news article and a short tutorial.   The slideshow we introduce to walk through functionality served successfully as a tutorial. Users during informal testing and at the poster session demos found the layout aesthetically pleasing, liked the transitions between line focuses and time constraints, and found node and edge highlighting both to be clear.
-
-Regarding the metro maps concept in general, most demo users saw the aesthetic appeal but not all found it convincingly superior to, say, a simple color-coded timeline in conveying information. A more formal user study with a wider variety of document sets could replicate the superior performance on information summarization that Shahaf’s original research demonstrated \cite{}.
 
 \section{Future Work}
 
