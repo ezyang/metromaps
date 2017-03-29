@@ -204,7 +204,7 @@ var debug = window.location.hash == "#debug";
 metro = metromap(d3.select("#svg-container"), debug)
   .size([1000, 600]);
 
-function clear() {
+function clearLocalStorage_State() {
   localStorage.setItem("state", null);
   initData();
 }
@@ -216,14 +216,14 @@ if (debug) {
   var state = localStorage.getItem("state");
   try {
     var parsed = JSON.parse(state);
-    if (!parsed) throw "nothing";
+    if (!parsed) throw "Cannot parse JSON from localStorage.";
     metro.state(parsed);
     metro();
     metro.stop();
   } catch(e) {
     //throw e; // uncomment me if you want to debug a corrupt savefile
-    if (e == "nothing") {
-      clear();
+    if (e == "Cannot parse JSON from localStorage.") {
+      clearLocalStorage_State();
     }
   }
   debugForce(metro, d3.select("#debug-container"));
